@@ -1,46 +1,74 @@
-#include <windows.h>
+#include "Window.h"
+#include "DXRenderer.h"
+#include "FPSCamera.h"
+#include "Cube.h"
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#include <iostream>
+
+using namespace core;
+
+void ProcessKeyboardInput(core::FPSCamera& camera)
 {
-    switch(uMsg)
+    if(GetAsyncKeyState('W') & 0x8000)
     {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
+        camera.MoveForward(1.f);
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        
+    if(GetAsyncKeyState('S') & 0x8000)
+    {
+        camera.MoveForward(-1.f);
+    }
+     
+    if(GetAsyncKeyState('A') & 0x8000)
+    {
+        camera.MoveRight(-1.f);
+    }
+
+    if(GetAsyncKeyState('D') & 0x8000)
+    {
+        camera.MoveRight(1.f);
+    }
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+int WINAPI WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nCmdShow)
 {
-    WNDCLASSEX wc = {
-        sizeof(WNDCLASSEX),
-        CS_CLASSDC,
-        WindowProc,
-        0, 0,
-        GetModuleHandle(NULL),
-        NULL, NULL, NULL, NULL,
-        L"DX11WindowClass", NULL};
+    Window window;
+    
 
-    RegisterClassEx(&wc);
-
-    HWND hwnd = CreateWindow(
-        wc.lpszClassName,
-        L"DirectX 11 초기화",
-        WS_OVERLAPPEDWINDOW,
-        100, 100, 800, 600,
-        NULL, NULL, wc.hInstance, NULL);
-
-    if(!hwnd) return -1;
-
-    ShowWindow(hwnd, nCmdShow);
-
-
-    MSG msg = {};
-    while(GetMessage(&msg, NULL, 0, 0))
+    MSG msg = {0};
+    while(msg.message != WM_QUIT)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else
+        {
+            ProcessKeyboardInput(camera);
+
+            DirectX::XMMATRIX viewMatrix = camera.GetViewMatrix();
+
+            float aspectRatio = 1280.f / 720.f;
+
+            DirectX::XMMATRIX projMatrix =
+                DirectX::XMMatrixPerspectiveFovLH(
+                    DirectX::XM_PIDIV4, // 45도 시야각
+                    aspectRatio,
+                    0.1f, 100.f
+                );
+
+            cube.Render(renderer.GetContext());
+            renderer.Render();
+        }
     }
+
+    renderer.Cleanup();
+    window.Cleanup();
+
     return 0;
 }
