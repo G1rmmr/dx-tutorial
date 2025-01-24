@@ -46,10 +46,10 @@ bool core::Cube::Initialize(ID3D11Device* device)
     bufferDesc.ByteWidth = sizeof(gCubeVertices);
     bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-    D3D11_SUBRESOURCE_DATA InitializeData = {};
-    InitializeData.pSysMem = gCubeVertices;
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = gCubeVertices;
 
-    if(FAILED(device->CreateBuffer(&bufferDesc, &InitializeData, &mVertexBuffer)))
+    if(FAILED(device->CreateBuffer(&bufferDesc, &initData, &mVertexBuffer)))
     {
         return false;
     }
@@ -57,9 +57,9 @@ bool core::Cube::Initialize(ID3D11Device* device)
     // 인덱스 버퍼 생성
     bufferDesc.ByteWidth = sizeof(gCubeIndices);
     bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    InitializeData.pSysMem = gCubeIndices;
+    initData.pSysMem = gCubeIndices;
 
-    if(FAILED(device->CreateBuffer(&bufferDesc, &InitializeData, &mIndexBuffer)))
+    if(FAILED(device->CreateBuffer(&bufferDesc, &initData, &mIndexBuffer)))
     {
         return false;
     }

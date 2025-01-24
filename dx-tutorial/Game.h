@@ -2,6 +2,8 @@
 
 #include <windows.h>
 
+#include <memory>
+
 namespace core
 {
     class Window;
@@ -19,17 +21,16 @@ namespace core
 
         void Cleanup();
 
-        void Update();
+        void Update(const float deltaTime);
         void Render();
 
         void OnMouseMove(int x, int y);
 
     private:
-        Window* mWindow;
-
-        FPSCamera* mCamera;
-        DXRenderer* mRenderer;
-        Cube* mCube;
+        std::unique_ptr<Window> mWindow;
+        std::unique_ptr<FPSCamera> mCamera;
+        std::unique_ptr<DXRenderer> mRenderer;
+        std::unique_ptr<Cube> mCube;
     };
 
 }

@@ -4,13 +4,11 @@
 #include "FPSCamera.h"
 #include "Cube.h"
 
-#include <iostream>
-
 core::Game::Game()
     : mWindow(nullptr)
     , mCamera(nullptr)
     , mRenderer(nullptr)
-    , mCube(nullptr);
+    , mCube(nullptr)
 {
 
 }
@@ -22,21 +20,21 @@ core::Game::~Game()
 
 bool core::Game::Initialize(HINSTANCE hInstance, int nCmdShow)
 {
-    mWindow = new Window();
+    mWindow = std::make_unique<Window>();
     if(!mWindow->Initialize(this, hInstance, nCmdShow))
     {
         return false;
     }
 
-    mRenderer = new DXRenderer();
+    mRenderer = std::make_unique<DXRenderer>();
     if(!mRenderer->Initialize(mWindow->GetHwnd()))
     {
         return 0;
     }
 
-    mCamera = new FPSCamera();
+    mCamera = std::make_unique<FPSCamera>();
 
-    mCube = new Cube();
+    mCube = std::make_unique<Cube>();
 
     if(!mCube->Initialize(mRenderer->GetDevice()))
     {
@@ -48,37 +46,26 @@ bool core::Game::Initialize(HINSTANCE hInstance, int nCmdShow)
 
 void core::Game::Cleanup()
 {
-    // 리소스 해제 순서 주의
-    // mRenderer.Cleanup();
-    // mCube.Cleanup();
-    // mCamera 등등...
+    mRenderer->Cleanup();
+    mCube->Cleanup();
 
     if(mWindow)
     {
         mWindow->Cleanup();
-        delete mWindow;
-        mWindow = nullptr;
     }
 }
 
-void core::Game::Update()
+void core::Game::Update(const float deltaTime)
 {
-    // 키보드 입력 처리, 카메라 이동 등등
-    // mCamera.Update();
+
 }
 
 void core::Game::Render()
 {
-    mRenderer.Clear(...);
-    mCube.Render(mRenderer.GetContext());
-    mRenderer.Present();
+
 }
 
-// Window::WndProc에서 호출됨 (WM_MOUSEMOVE)
 void core::Game::OnMouseMove(int x, int y)
 {
-    // 예: 여기서 FPSCamera에 Rotate를 명령하거나
-    // mCamera.Rotate(dx, dy);
-    // 하지만 dx, dy 계산을 위해선 이전 마우스 위치를 저장해야 할 수도 있음
-    std::cout << "OnMouseMove: (" << x << ", " << y << ")\n";
+
 }

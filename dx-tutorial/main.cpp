@@ -1,34 +1,6 @@
-#include "Window.h"
-#include "DXRenderer.h"
-#include "FPSCamera.h"
-#include "Cube.h"
-
 #include <iostream>
 
-using namespace core;
-
-void ProcessKeyboardInput(core::FPSCamera& camera)
-{
-    if(GetAsyncKeyState('W') & 0x8000)
-    {
-        camera.MoveForward(1.f);
-    }
-        
-    if(GetAsyncKeyState('S') & 0x8000)
-    {
-        camera.MoveForward(-1.f);
-    }
-     
-    if(GetAsyncKeyState('A') & 0x8000)
-    {
-        camera.MoveRight(-1.f);
-    }
-
-    if(GetAsyncKeyState('D') & 0x8000)
-    {
-        camera.MoveRight(1.f);
-    }
-}
+#include "Game.h"
 
 int WINAPI WinMain(
     _In_ HINSTANCE hInstance,
@@ -36,39 +8,42 @@ int WINAPI WinMain(
     _In_ LPSTR lpCmdLine,
     _In_ int nCmdShow)
 {
-    Window window;
-    
+    core::Game game;
+    if(!game.Initialize(hInstance, nCmdShow))
+    {
+        std::cerr << "GAME INITIALIZATION FAILED!!\n";
+        return -1;
+    }
+
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+
+    LARGE_INTEGER lastTime;
+    QueryPerformanceCounter(&lastTime);
 
     MSG msg = {0};
     while(msg.message != WM_QUIT)
     {
-        if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        if(PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
         else
         {
-            ProcessKeyboardInput(camera);
+            LARGE_INTEGER currTime;
+            QueryPerformanceCounter(&currTime);
 
-            DirectX::XMMATRIX viewMatrix = camera.GetViewMatrix();
+            double deltaTime = static_cast<double>(currTime.QuadPart - lastTime.QuadPart)
+                / static_cast<double>(freq.QuadPart);
 
-            float aspectRatio = 1280.f / 720.f;
+            lastTime = currTime;
 
-            DirectX::XMMATRIX projMatrix =
-                DirectX::XMMatrixPerspectiveFovLH(
-                    DirectX::XM_PIDIV4, // 45도 시야각
-                    aspectRatio,
-                    0.1f, 100.f
-                );
-
-            cube.Render(renderer.GetContext());
-            renderer.Render();
+            game.Update(static_cast<float>(deltaTime));
+            game.Render();
         }
     }
 
-    renderer.Cleanup();
-    window.Cleanup();
-
-    return 0;
+    game.Cleanup();
+    return static_cast<int>(msg.wParam);
 }

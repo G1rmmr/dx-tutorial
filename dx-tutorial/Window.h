@@ -11,6 +11,9 @@ namespace core
     class Window
     {
     public:
+        Window();
+        ~Window();
+
         static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
         bool Initialize(Game* game, HINSTANCE hInstance, int nCmdShow);
