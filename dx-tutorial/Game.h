@@ -2,34 +2,51 @@
 
 #include <windows.h>
 
-namespace core
+static const int WIN_WIDTH = 1024;
+static const int WIN_HEIGHT = 768;
+static const int THICKNESS = 15;
+static const float PADDLE_HEIGHT = 100.f;
+
+struct Vec2
 {
-    class Window;
-    class DXRenderer;
-    class FPSCamera;
-    class Cube;
+	float X;
+	float Y;
+};
 
-    class Game
-    {
-    public:
-        Game();
-        ~Game();
+class Game
+{
+public:
+	Game();
+	~Game() = default;
 
-        bool Initialize(HINSTANCE hInstance, int nCmdShow);
+	bool Initialize(HINSTANCE hInstance);
+	void Cleanup();
 
-        void Cleanup();
+	static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        void Update();
-        void Render();
+private:
+	void onCreate(HWND hwnd, CREATESTRUCT* create);
+	void onDestroy();
+	void onPaint(HDC hdc, PAINTSTRUCT& ps);
+	void onTimer(UINT_PTR timerId);
+	void onKeyDown(WPARAM wParam);
+	void onKeyUp(WPARAM wParam);
 
-        void OnMouseMove(int x, int y);
+	void updateGame(float deltaTime);
+	void render(HDC hdc);
 
-    private:
-        Window* mWindow;
+	LARGE_INTEGER mCount;
+	LARGE_INTEGER mFreq;
 
-        FPSCamera* mCamera;
-        DXRenderer* mRenderer;
-        Cube* mCube;
-    };
+	HWND mHwnd;
 
-}
+	Vec2 mPadPos;
+	Vec2 mBallPos;
+	Vec2 mBallVel;
+	
+	int mPadDir;
+	bool bIsRunning;
+
+	bool mKeyW;
+	bool mKeyS;
+};
