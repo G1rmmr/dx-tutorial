@@ -2,35 +2,61 @@
 
 #include <windows.h>
 
-#include <memory>
+#include <vector>
 
 namespace core
 {
-    class Window;
-    class DXRenderer;
-    class FPSCamera;
-    class Cube;
+	class Actor;
+	class Renderer;
 
-    class Game
-    {
-    public:
-        Game();
-        ~Game();
+	class Game
+	{
+	public:
+		Game();
+		~Game();
 
-        bool Initialize(HINSTANCE hInstance, int nCmdShow);
+		bool Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow);
+		void Run();
+		void Cleanup();
 
-        void Cleanup();
+		void AddActor(Actor* actor);
+		void RemoveActor(Actor* actor);
 
-        void Update(const float deltaTime);
-        void Render();
+		inline Renderer* GetRenderer() const
+		{
+			return mRenderer;
+		}
 
-        void OnMouseMove(int x, int y);
+		inline bool IsRunning() const
+		{
+			return mIsRunning;
+		}
 
-    private:
-        std::unique_ptr<Window> mWindow;
-        std::unique_ptr<FPSCamera> mCamera;
-        std::unique_ptr<DXRenderer> mRenderer;
-        std::unique_ptr<Cube> mCube;
-    };
+	private:
+		static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+		bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
+		
+		void processInput();
+		void update();
+		void render();
+		
+		void loadData();
+		void unloadData();
 
+		std::vector<Actor*> mActors;
+		std::vector<Actor*> mPendingActors;
+
+		Renderer* mRenderer;
+
+		HWND mHwnd;
+		HINSTANCE mHInstance;
+
+		LONG mTicksCount;
+
+		int mScreenWidth;
+		int mScreenHeight;
+
+		bool mIsRunning;
+		bool mUpdatingActors;
+	};
 }

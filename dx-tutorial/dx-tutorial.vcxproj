@@ -160,10 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="VertexArray.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="arch.md" />

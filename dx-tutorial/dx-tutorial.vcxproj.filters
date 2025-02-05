@@ -19,17 +19,50 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="Component.cpp">
+      <Filter>engine\src</Filter>
+    </ClCompile>
+>>>>>>> ce66a752311165062364130e236380313d221a09
     <ClCompile Include="Game.cpp">
       <Filter>engine\src</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>app</Filter>
+<<<<<<< HEAD
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
       <Filter>engine\src</Filter>
     </ClInclude>
+=======
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>engine\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>engine\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Movement.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+>>>>>>> ce66a752311165062364130e236380313d221a09
     <ClInclude Include="Renderer.h">
       <Filter>engine\src</Filter>
     </ClInclude>
@@ -41,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="VertexArray.h">
       <Filter>engine\src</Filter>
+<<<<<<< HEAD
+=======
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>engine\src</Filter>
+>>>>>>> ce66a752311165062364130e236380313d221a09
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
