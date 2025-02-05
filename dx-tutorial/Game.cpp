@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "Renderer.h"
-#include "Actor.h"
 
 using namespace core;
 

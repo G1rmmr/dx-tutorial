@@ -1,59 +1,86 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="소스 파일">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{2745d2e2-ae02-4967-a6ef-1c6a572008d2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="app">
+      <UniqueIdentifier>{473071c8-0adb-4ecb-9ab1-75b55cf1286d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="리소스 파일">
+    <Filter Include="engine">
+      <UniqueIdentifier>{b704ac35-251a-45bb-945b-549b33002944}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\src">
+      <UniqueIdentifier>{3a8d1f72-419d-4b57-93aa-0db904d07902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="DXRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="FPSCamera.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Cube.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="Component.cpp">
+      <Filter>engine\src</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>engine\src</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>engine\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>engine\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Window.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="Actor.h">
+      <Filter>engine\src</Filter>
     </ClInclude>
-    <ClInclude Include="DXRenderer.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="Camera.h">
+      <Filter>engine\src</Filter>
     </ClInclude>
-    <ClInclude Include="FPSCamera.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Cube.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="Component.h">
+      <Filter>engine\src</Filter>
     </ClInclude>
     <ClInclude Include="Game.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Movement.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexArray.h">
+      <Filter>engine\src</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>engine\src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="arch.md">
-      <Filter>리소스 파일</Filter>
+      <Filter>resources</Filter>
     </None>
+    <None Include="Common.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
