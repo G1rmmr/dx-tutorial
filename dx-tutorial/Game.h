@@ -4,11 +4,11 @@
 
 #include <vector>
 
+#include "Renderer.h"
+#include "Player.h"
+
 namespace core
 {
-	class Actor;
-	class Renderer;
-
 	class Game
 	{
 	public:
@@ -18,9 +18,6 @@ namespace core
 		bool Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow);
 		void Run();
 		void Cleanup();
-
-		void AddActor(Actor* actor);
-		void RemoveActor(Actor* actor);
 
 		inline Renderer* GetRenderer() const
 		{
@@ -34,29 +31,25 @@ namespace core
 
 	private:
 		static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 		bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
 		
 		void processInput();
 		void update();
 		void render();
-		
-		void loadData();
-		void unloadData();
 
-		std::vector<Actor*> mActors;
-		std::vector<Actor*> mPendingActors;
+		Player mPlayer;
+		HWND mHwnd;
+		
+		HINSTANCE mHInstance;
 
 		Renderer* mRenderer;
 
-		HWND mHwnd;
-		HINSTANCE mHInstance;
-
-		LONG mTicksCount;
+		DWORD mTicksCount;
 
 		int mScreenWidth;
 		int mScreenHeight;
 
 		bool mIsRunning;
-		bool mUpdatingActors;
 	};
 }

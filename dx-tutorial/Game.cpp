@@ -1,21 +1,44 @@
 #include "Game.h"
 
-#include <algorithm>
-
-#include "Renderer.h"
+#include <windowsx.h>
 
 using namespace core;
 
 LRESULT CALLBACK Game::sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    Player mPlayer = mPlayer;
+    HWND mHwnd = mHwnd;
+
     switch(message)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+
+    case WM_KEYDOWN:
+        break;
+
+    case WM_MOUSEMOVE:
+    {
+        // 마우스의 현재 위치를 얻고, 이전 위치와 비교해 이동량을 구합니다.
+        static int lastX = 0;
+        static int lastY = 0;
+
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+
+        int deltaX = x - lastX;
+        int deltaY = y - lastY;
+
+        mPlayer.ProcessMouseMovement((float)deltaX, (float)-deltaY);
+
+        lastX = x;
+        lastY = y;
+    }
+    return 0;
     }
 
-    return DefWindowProc(hwnd, message, wParam, lParam);
+    return DefWindowProc(mHwnd, message, wParam, lParam);
 }
 
 Game::Game()
@@ -26,7 +49,6 @@ Game::Game()
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
-    , mUpdatingActors(false)
 {
 
 }
@@ -55,47 +77,44 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         return false;
     }
 
-    loadData();
 
     mIsRunning = true;
-    mTicksCount = GetTickCount();
-
     return true;
 }
 
 void Game::Run()
 {
     MSG msg = {};
-    while(mIsRunning)
-    {
-        while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
-            if(msg.message == WM_QUIT)
-            {
-                mIsRunning = false;
-            }
-            else
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
+    mTicksCount = GetTickCount64();
 
-        if(!mIsRunning)
+    while(msg.message != WM_QUIT && mIsRunning)
+    {
+        if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
-            break;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
-        processInput();
-        update();
-        render();
+        else
+        {
+            DWORD currentTime = GetTickCount64();
+            float deltaTime = (currentTime - mTicksCount) * 0.001f;
+            mTicksCount = currentTime;
+
+            bool forwardKey = (GetAsyncKeyState('W') & 0x8000) != 0;
+            bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
+            bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
+            bool rightKey = (GetAsyncKeyState('D') & 0x8000) != 0;
+
+            mPlayer.ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
+
+            // Render();
+        }
     }
 }
 
 void Game::Cleanup()
 {
     mIsRunning = false;
-
-    unloadData();
 
     if(mRenderer)
     {
@@ -108,33 +127,6 @@ void Game::Cleanup()
     {
         DestroyWindow(mHwnd);
         mHwnd = nullptr;
-    }
-}
-
-void Game::AddActor(Actor* actor)
-{
-    if(mUpdatingActors)
-    {
-        mPendingActors.emplace_back(actor);
-    }
-    else
-    {
-        mActors.emplace_back(actor);
-    }
-}
-
-void Game::RemoveActor(Actor* actor)
-{
-    auto iter = std::find(mPendingActors.begin(), mPendingActors.end(), actor);
-    if(iter != mPendingActors.end())
-    {
-        mPendingActors.erase(iter);
-    }
-
-    iter = std::find(mActors.begin(), mActors.end(), actor);
-    if(iter != mActors.end())
-    {
-        mActors.erase(iter);
     }
 }
 
@@ -185,7 +177,7 @@ void Game::processInput()
 
 void Game::update()
 {
-    DWORD currTicks = GetTickCount();
+    DWORD currTicks = GetTickCount64();
     float deltaTime = (currTicks - mTicksCount) / 1000.0f;
 
     if(deltaTime > 0.05f)
@@ -194,31 +186,6 @@ void Game::update()
     }
 
     mTicksCount = currTicks;
-
-    mUpdatingActors = true;
-    for(auto actor : mActors)
-    {
-        actor->Update(deltaTime);
-    }
-
-    mUpdatingActors = false;
-
-    for(auto pending : mPendingActors)
-    {
-        mActors.emplace_back(pending);
-    }
-    mPendingActors.clear();
-
-    auto removeIter = std::remove_if(mActors.begin(), mActors.end(),
-        [](Actor* a)
-        {
-            return a->GetState() == Actor::eState::Dead;
-        });
-
-    if(removeIter != mActors.end())
-    {
-        mActors.erase(removeIter, mActors.end());
-    }
 }
 
 void Game::render()
@@ -226,24 +193,5 @@ void Game::render()
     if(mRenderer)
     {
         mRenderer->Draw();
-    }
-}
-
-void Game::loadData()
-{
-
-}
-
-void Game::unloadData()
-{
-    while(!mActors.empty())
-    {
-        delete mActors.back();
-    }
-
-    while(!mPendingActors.empty())
-    {
-        delete mPendingActors.back();
-        mPendingActors.pop_back();
     }
 }
