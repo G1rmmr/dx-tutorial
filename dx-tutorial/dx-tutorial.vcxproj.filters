@@ -1,101 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{2745d2e2-ae02-4967-a6ef-1c6a572008d2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="app">
-      <UniqueIdentifier>{473071c8-0adb-4ecb-9ab1-75b55cf1286d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine">
-      <UniqueIdentifier>{b704ac35-251a-45bb-945b-549b33002944}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine\src">
-      <UniqueIdentifier>{3a8d1f72-419d-4b57-93aa-0db904d07902}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="resources">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <FxCompile Include="PixelShader.hlsl" />
+    <FxCompile Include="VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
-=======
-    <ClCompile Include="Component.cpp">
-      <Filter>engine\src</Filter>
-    </ClCompile>
->>>>>>> ce66a752311165062364130e236380313d221a09
-    <ClCompile Include="Game.cpp">
-      <Filter>engine\src</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>app</Filter>
-<<<<<<< HEAD
-    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-=======
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>engine\src</Filter>
-    </ClCompile>
-    <ClCompile Include="Actor.cpp">
-      <Filter>engine\src</Filter>
-    </ClCompile>
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Player.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Actor.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Component.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Movement.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
->>>>>>> ce66a752311165062364130e236380313d221a09
-    <ClInclude Include="Renderer.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>engine\src</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexArray.h">
-      <Filter>engine\src</Filter>
-<<<<<<< HEAD
-=======
-    </ClInclude>
-    <ClInclude Include="Position.h">
-      <Filter>engine\src</Filter>
->>>>>>> ce66a752311165062364130e236380313d221a09
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="arch.md">
-      <Filter>resources</Filter>
-    </None>
-    <None Include="Common.hlsli">
-      <Filter>shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
+    <None Include="arch.md" />
+    <None Include="Common.hlsli" />
   </ItemGroup>
 </Project>
