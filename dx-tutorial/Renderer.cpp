@@ -15,6 +15,7 @@ Renderer::Renderer()
     , mDepthStencilView(nullptr)
     , mDepthStencilState(nullptr)
     , mRasterizerState(nullptr)
+    , mShader(nullptr)
 {
 
 }

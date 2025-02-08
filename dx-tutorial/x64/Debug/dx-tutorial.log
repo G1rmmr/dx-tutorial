@@ -1,3 +1,13 @@
-﻿FXC : error X3501: 'main': entrypoint not found
-  
-  compilation failed; no code produced
+﻿  compilation object save succeeded; see C:\Users\G1\source\repos\dx-tutorial\x64\Debug\PixelShader.cso
+  compilation object save succeeded; see C:\Users\G1\source\repos\dx-tutorial\x64\Debug\VertexShader.cso
+  main.cpp
+  Game.cpp
+  Player.cpp
+C:\Users\G1\source\repos\dx-tutorial\dx-tutorial\Game.cpp(88,33): warning C4244: '=': 'ULONGLONG'에서 'DWORD'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\G1\source\repos\dx-tutorial\dx-tutorial\Game.cpp(99,31): warning C4244: '초기화 중': 'ULONGLONG'에서 'DWORD'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\G1\source\repos\dx-tutorial\dx-tutorial\Game.cpp(180,21): warning C4244: '초기화 중': 'ULONGLONG'에서 'DWORD'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  Renderer.cpp
+  Shader.cpp
+  코드를 생성하고 있습니다...
+C:\Users\G1\source\repos\dx-tutorial\dx-tutorial\Game.cpp(9): error C4700: 초기화되지 않은 'mPlayer' 지역 변수를 사용했습니다.
+C:\Users\G1\source\repos\dx-tutorial\dx-tutorial\Game.cpp(10): error C4700: 초기화되지 않은 'mHwnd' 지역 변수를 사용했습니다.
