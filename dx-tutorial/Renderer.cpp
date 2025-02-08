@@ -1,4 +1,7 @@
 #include "Renderer.h"
+
+#include "Shader.h"
+
 #include <assert.h>
 
 using namespace core;
@@ -48,6 +51,12 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         return false;
     }
 
+    mShader = new Shader();
+    if(!mShader->Initialize(mDevice, L"VertexShader.hlsl", "VSMain", L"PixelShader.hlsl", "PSMain"))
+    {
+        return false;
+    }
+
     mDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
     D3D11_VIEWPORT viewport;
@@ -64,6 +73,13 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
 
 void Renderer::Cleanup()
 {
+    if(mShader)
+    {
+        mShader->Cleanup();
+        delete mShader;
+        mShader = nullptr;
+    }
+
     if(mRasterizerState)
     {
         mRasterizerState->Release();
@@ -128,6 +144,7 @@ void Renderer::EndFrame()
 
 void Renderer::Draw()
 {
+    mShader->SetShader(mDeviceContext);
     // 실제 드로우 호출이 들어갈 자리
     // ex) m_deviceContext->IASetInputLayout( ... );
     //     m_deviceContext->IASetVertexBuffers( ... );

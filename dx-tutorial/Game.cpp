@@ -107,7 +107,7 @@ void Game::Run()
 
             mPlayer.ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
 
-            // Render();
+            mRenderer->Draw();
         }
     }
 }
