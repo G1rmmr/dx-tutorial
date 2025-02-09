@@ -1,55 +1,45 @@
 #pragma once
 
-#include <windows.h>
-
-#include <vector>
-
-#include "Renderer.h"
-#include "Player.h"
+#include <Windows.h>
 
 namespace core
 {
-	class Game
-	{
-	public:
-		Game();
-		~Game();
+    class Renderer;
+    class Player;
 
-		bool Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow);
-		void Run();
-		void Cleanup();
+    class Game
+    {
+    public:
+        Game();
+        ~Game();
 
-		inline Renderer* GetRenderer() const
-		{
-			return mRenderer;
-		}
+        bool Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow);
+        void Run();
+        void Cleanup();
 
-		inline bool IsRunning() const
-		{
-			return mIsRunning;
-		}
+    private:
+        static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	private:
-		static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        LRESULT windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-		bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
-		
-		void processInput();
-		void update();
-		void render();
+        bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
 
-		Player mPlayer;
-		HWND mHwnd;
-		
-		HINSTANCE mHInstance;
+        void processInput(float deltaTime);
+        void update(float deltaTime);
+        void render();
 
-		Renderer* mRenderer;
+    private:
+        
+        HINSTANCE mHInstance;
+        HWND mHwnd;
+        DWORD mTicksCount;
 
-		DWORD mTicksCount;
+        Renderer* mRenderer;
+        Player* mPlayer;
 
-		int mScreenWidth;
-		int mScreenHeight;
+        int mScreenWidth;
+        int mScreenHeight;
 
-		bool mIsRunning;
-	};
+        bool mIsRunning;
+    };
 }

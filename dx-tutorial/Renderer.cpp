@@ -178,6 +178,9 @@ bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
     swapChainDesc.Flags = 0;
 
     UINT createDeviceFlags = 0;
+#if defined(_DEBUG)
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 
     D3D_FEATURE_LEVEL featureLevels[] =
     {
@@ -185,6 +188,7 @@ bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
         D3D_FEATURE_LEVEL_10_1,
         D3D_FEATURE_LEVEL_10_0
     };
+
     D3D_FEATURE_LEVEL featureLevel;
 
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
