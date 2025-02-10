@@ -22,6 +22,8 @@ namespace core
 
         void Draw();
 
+        void SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj);
+
     private:
         bool createDeviceAndSwapChain(HWND hWnd, int width, int height);
         bool createRenderTargetView();
@@ -40,6 +42,11 @@ namespace core
         ID3D11DepthStencilState* mDepthStencilState;
 
         ID3D11RasterizerState* mRasterizerState;
+
+        ID3D11Buffer* mMatrixBuffer;
+
+        ID3D11Buffer* mTriangleVertexBuffer;
+        ID3D11InputLayout* mInputLayout;
 
         Shader* mShader;
     };

@@ -1,17 +1,31 @@
-#include "Common.hlsli"
-
-PS_INPUT main(VS_INPUT input)
+cbuffer MatrixBuffer : register(b0)
 {
-    PS_INPUT output;
+    float4x4 View;
+    float4x4 Proj;
+};
+
+
+struct VS_INPUT
+{
+    float3 Pos : POSITION;
+    float4 Color : COLOR;
+};
+
+struct VS_OUTPUT
+{
+    float4 Pos : SV_POSITION;
+    float4 Color : COLOR;
+};
+
+VS_OUTPUT VSMain(VS_INPUT input)
+{
+    VS_OUTPUT output;
     
-    float4 worldPos = mul(float4(input.Pos, 1.0), World);
-    output.WorldPos = worldPos.xyz;
+    float4 posWorld = float4(input.Pos, 1.0f);
     
-    output.Pos = mul(worldPos, View);
-    output.Pos = mul(output.Pos, Proj);
+    float4 posView = mul(posWorld, View);
+    output.Pos = mul(posView, Proj);
     
-    output.Norm = mul(input.Norm, (float3x3)World);
-    output.Norm = normalize(output.Norm);
-    
+    output.Color = input.Color;
     return output;
 }
