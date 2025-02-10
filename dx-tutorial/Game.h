@@ -32,7 +32,7 @@ namespace core
         
         HINSTANCE mHInstance;
         HWND mHwnd;
-        DWORD mTicksCount;
+        ULONGLONG mTicksCount;
 
         Renderer* mRenderer;
         Player* mPlayer;

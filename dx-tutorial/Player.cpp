@@ -21,7 +21,7 @@ void Player::ProcessMouseMovement(float xOffset, float yOffset)
 	xOffset *= mMouseSensitivity;
 	yOffset *= mMouseSensitivity;
 
-	mYaw += xOffset;
+	mYaw -= xOffset;
 	mPitch += yOffset;
 
 	if(mPitch > 89.f)

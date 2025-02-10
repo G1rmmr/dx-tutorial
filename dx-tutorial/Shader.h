@@ -22,6 +22,11 @@ namespace core
 
         void SetShader(ID3D11DeviceContext* deviceContext);
 
+        inline ID3DBlob* GetVSBlob() const
+        {
+            return mVSBlob;
+        }
+
     private:
         bool compileShaderFromFile(
             const std::wstring& filename,
@@ -29,11 +34,10 @@ namespace core
             const std::string& shaderModel,
             ID3DBlob** blobOut);
 
-        bool createInputLayout(ID3D11Device* device, ID3DBlob* vsBlob);
-
     private:
         ID3D11VertexShader* mVertexShader;
         ID3D11PixelShader* mPixelShader;
-        ID3D11InputLayout* mInputLayout;
+
+        ID3DBlob* mVSBlob;
     };
 }

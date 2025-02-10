@@ -6,7 +6,7 @@ using namespace core;
 Shader::Shader()
     : mVertexShader(nullptr)
     , mPixelShader(nullptr)
-    , mInputLayout(nullptr)
+    , mVSBlob(nullptr)
 {
 
 }
@@ -32,7 +32,10 @@ bool Shader::Initialize(
     ID3DBlob* psBlob = nullptr;
     if(!compileShaderFromFile(psFilename, psEntryPoint, "ps_5_0", &psBlob))
     {
-        if(vsBlob) vsBlob->Release();
+        if(vsBlob)
+        {
+            vsBlob->Release();
+        }
         return false;
     }
 
@@ -62,14 +65,8 @@ bool Shader::Initialize(
         return false;
     }
 
-    if(!createInputLayout(device, vsBlob))
-    {
-        vsBlob->Release();
-        psBlob->Release();
-        return false;
-    }
 
-    vsBlob->Release();
+    mVSBlob = vsBlob;
     psBlob->Release();
 
     return true;
@@ -77,16 +74,18 @@ bool Shader::Initialize(
 
 void Shader::Cleanup()
 {
-    if(mInputLayout)
+    if(mVSBlob)
     {
-        mInputLayout->Release();
-        mInputLayout = nullptr;
+        mVSBlob->Release();
+        mVSBlob = nullptr;
     }
+
     if(mVertexShader)
     {
         mVertexShader->Release();
         mVertexShader = nullptr;
     }
+
     if(mPixelShader)
     {
         mPixelShader->Release();
@@ -96,7 +95,6 @@ void Shader::Cleanup()
 
 void Shader::SetShader(ID3D11DeviceContext* deviceContext)
 {
-    deviceContext->IASetInputLayout(mInputLayout);
     deviceContext->VSSetShader(mVertexShader, nullptr, 0);
     deviceContext->PSSetShader(mPixelShader, nullptr, 0);
 }
@@ -136,38 +134,8 @@ bool Shader::compileShaderFromFile(
     }
 
     if(errorMessage)
+    {
         errorMessage->Release();
-
-    return true;
-}
-
-bool Shader::createInputLayout(ID3D11Device* device, ID3DBlob* vsBlob)
-{
-    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
-    {
-        {
-            "POSITION",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            0,
-            D3D11_INPUT_PER_VERTEX_DATA,
-            0
-        }
-    };
-
-    UINT numElements = _countof(layoutDesc);
-
-    HRESULT hr = device->CreateInputLayout(
-        layoutDesc,
-        numElements,
-        vsBlob->GetBufferPointer(),
-        vsBlob->GetBufferSize(),
-        &mInputLayout);
-
-    if(FAILED(hr))
-    {
-        return false;
     }
 
     return true;

@@ -1,20 +1,10 @@
-#include "Common.hlsli"
-
-float4 main(PS_INPUT input) : SV_TARGET
+struct PS_INPUT
 {
-    float3 amb = AmbColor;
-    
-    float3 lightDir = normalize(LightPos - input.WorldPos);
-    
-    float _diff = max(dot(input.Norm, lightDir), 0.0);
-    float3 diff = _diff * DiffColor;
-    
-    float3 viewDir = normalize(-input.WorldPos);
-    float3 reflectDir = reflect(-lightDir, input.Norm);
-    
-    float _spec = pow(max(dot(viewDir, reflectDir), 0.0), Shininess);
-    float3 spec = _spec * SpecColor;
-    
-    float3 result = amb + diff + spec;
-    return float4(result, 1.0);
+    float4 Pos : SV_POSITION;
+    float4 Color : COLOR;
+};
+
+float4 PSMain(PS_INPUT input) : SV_TARGET
+{
+    return input.Color;
 }

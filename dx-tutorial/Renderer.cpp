@@ -6,6 +6,18 @@
 
 using namespace core;
 
+struct Vertex
+{
+    DirectX::XMFLOAT3 Pos;
+    DirectX::XMFLOAT4 Color;
+};
+
+struct MatrixBuffer
+{
+    DirectX::XMMATRIX View;
+    DirectX::XMMATRIX Proj;
+};
+
 Renderer::Renderer()
     : mDevice(nullptr)
     , mDeviceContext(nullptr)
@@ -16,6 +28,9 @@ Renderer::Renderer()
     , mDepthStencilState(nullptr)
     , mRasterizerState(nullptr)
     , mShader(nullptr)
+    , mTriangleVertexBuffer(nullptr)
+    , mInputLayout(nullptr)
+    , mMatrixBuffer(nullptr)
 {
 
 }
@@ -53,8 +68,68 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     }
 
     mShader = new Shader();
-    if(!mShader->Initialize(mDevice, L"VertexShader.hlsl", "VSMain", L"PixelShader.hlsl", "PSMain"))
+    if(!mShader->Initialize(mDevice,
+        L"VertexShader.hlsl", "VSMain",
+        L"PixelShader.hlsl", "PSMain"))
     {
+        MessageBox(nullptr, L"Shader init failed", L"Error", MB_OK);
+        return false;
+    }
+
+    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,   0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    UINT numElements = _countof(layoutDesc);
+
+    ID3DBlob* vsBlob = mShader->GetVSBlob();
+
+    HRESULT hr = mDevice->CreateInputLayout(
+        layoutDesc,
+        numElements,
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(),
+        &mInputLayout
+    );
+    if(FAILED(hr))
+    {
+        MessageBox(nullptr, L"CreateInputLayout failed", L"Error", MB_OK);
+        return false;
+    }
+
+    D3D11_BUFFER_DESC cbd = {};
+    cbd.Usage = D3D11_USAGE_DEFAULT;
+    cbd.ByteWidth = sizeof(MatrixBuffer);
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbd.CPUAccessFlags = 0;
+
+    hr = mDevice->CreateBuffer(&cbd, nullptr, &mMatrixBuffer);
+    if(FAILED(hr))
+    {
+        return false;
+    }
+
+    Vertex triangleVertices[] =
+    {
+        { DirectX::XMFLOAT3(0.f,  0.5f, 0.f), DirectX::XMFLOAT4(1, 0, 0, 1) },
+        { DirectX::XMFLOAT3(0.5f, -0.5f, 0.f), DirectX::XMFLOAT4(0, 1, 0, 1) },
+        { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.f), DirectX::XMFLOAT4(0, 0, 1, 1) },
+    };
+
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(triangleVertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = triangleVertices;
+
+    hr = mDevice->CreateBuffer(&bd, &initData, &mTriangleVertexBuffer);
+    if(FAILED(hr))
+    {
+        MessageBox(nullptr, L"Failed to create triangle vertex buffer.", L"Error", MB_OK);
         return false;
     }
 
@@ -69,8 +144,10 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     viewport.TopLeftY = 0.f;
 
     mDeviceContext->RSSetViewports(1, &viewport);
+
     return true;
 }
+
 
 void Renderer::Cleanup()
 {
@@ -128,11 +205,31 @@ void Renderer::Cleanup()
         mDevice->Release();
         mDevice = nullptr;
     }
+
+    if(mTriangleVertexBuffer)
+    {
+        mTriangleVertexBuffer->Release();
+        mTriangleVertexBuffer = nullptr;
+    }
+
+    if(mInputLayout)
+    {
+        mInputLayout->Release();
+        mInputLayout = nullptr;
+    }
+
+    if(mMatrixBuffer)
+    {
+        mMatrixBuffer->Release();
+        mMatrixBuffer = nullptr;
+    }
 }
 
 void Renderer::BeginFrame(float red, float green, float blue, float alpha)
 {
-    float clearColor[4] = {red, green, blue, alpha};
+    mDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+
+    float clearColor[4] = {0.f, 0.f, 0.f, 1.f};
     mDeviceContext->ClearRenderTargetView(mRenderTargetView, clearColor);
 
     mDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -146,14 +243,18 @@ void Renderer::EndFrame()
 void Renderer::Draw()
 {
     mShader->SetShader(mDeviceContext);
-    // 실제 드로우 호출이 들어갈 자리
-    // ex) m_deviceContext->IASetInputLayout( ... );
-    //     m_deviceContext->IASetVertexBuffers( ... );
-    //     m_deviceContext->IASetIndexBuffer( ... );
-    //     m_deviceContext->DrawIndexed(...);
 
-    // 여기서는 간단히 예시만 표시
-    // "실제 게임 로직 or Mesh/Shader 호출"을 여기서 해줍니다.
+    // Input Layout 지정
+    mDeviceContext->IASetInputLayout(mInputLayout);
+
+    // 정점 버퍼, 토폴로지 지정
+    UINT stride = sizeof(Vertex); // 혹은 XMFLOAT3 + XMFLOAT4
+    UINT offset = 0;
+    mDeviceContext->IASetVertexBuffers(0, 1, &mTriangleVertexBuffer, &stride, &offset);
+    mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // 드로우
+    mDeviceContext->Draw(3, 0);
 }
 
 bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
@@ -171,10 +272,10 @@ bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
     swapChainDesc.SampleDesc.Quality = 0;
 
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 1;
+    swapChainDesc.BufferCount = 2;
     swapChainDesc.OutputWindow = hWnd;
     swapChainDesc.Windowed = TRUE;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.Flags = 0;
 
     UINT createDeviceFlags = 0;
@@ -311,4 +412,26 @@ bool Renderer::createRasterizerState()
 
     mDeviceContext->RSSetState(mRasterizerState);
     return true;
+}
+
+void Renderer::SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj)
+{
+    MatrixBuffer bufData = {};
+
+    bufData.View = DirectX::XMMatrixTranspose(view);
+    bufData.Proj = DirectX::XMMatrixTranspose(proj);
+
+    mDeviceContext->UpdateSubresource(
+        mMatrixBuffer,
+        0,
+        nullptr,
+        &bufData,
+        0, 0
+    );
+
+    mDeviceContext->VSSetConstantBuffers(
+        0,
+        1,
+        &mMatrixBuffer
+    );
 }

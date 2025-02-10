@@ -43,6 +43,8 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mScreenWidth = width;
     mScreenHeight = height;
 
+    mPlayer = new Player();
+
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
         return false;
@@ -84,8 +86,8 @@ void Game::Run()
             break;
         }
 
-        DWORD currentTime = GetTickCount64();
-        float deltaTime = (currentTime - mTicksCount) / 1000.0f;
+        ULONGLONG currentTime = GetTickCount64();
+        float deltaTime = (currentTime - mTicksCount) / 1000.f;
         
         if(deltaTime > 0.05f)
         {
@@ -102,6 +104,12 @@ void Game::Run()
 
 void Game::Cleanup()
 {
+    if(mPlayer)
+    {
+        delete mPlayer;
+        mPlayer = nullptr;
+    }
+
     if(mRenderer)
     {
         mRenderer->Cleanup();
@@ -190,19 +198,34 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_MOUSEMOVE:
     {
-        static int lastX = 0;
-        static int lastY = 0;
+        static bool firstCall = true;
+        static int centerX = 0;
+        static int centerY = 0;
+
+        if(firstCall)
+        {
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+
+            centerX = (rect.right - rect.left) / 2;
+            centerY = (rect.bottom - rect.top) / 2;
+            firstCall = false;
+        }
 
         int x = GET_X_LPARAM(lParam);
         int y = GET_Y_LPARAM(lParam);
 
-        int deltaX = x - lastX;
-        int deltaY = y - lastY;
+        int deltaX = x - centerX;
+        int deltaY = y - centerY;
 
         mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
 
-        lastX = x;
-        lastY = y;
+        POINT pt;
+        pt.x = centerX;
+        pt.y = centerY;
+        ClientToScreen(hwnd, &pt);
+        SetCursorPos(pt.x, pt.y);
+
         return 0;
     }
 
@@ -215,6 +238,12 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void Game::processInput(float deltaTime)
 {
+    if(GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+    {
+        mIsRunning = false;
+        return;
+    }
+
     bool forwardKey = (GetAsyncKeyState('W') & 0x8000) != 0;
     bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
     bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
@@ -225,7 +254,16 @@ void Game::processInput(float deltaTime)
 
 void Game::update(float deltaTime)
 {
+    DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
+    constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
+    const float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
+    const float nearZ = 0.1f;
+    const float farZ = 100.0f;
+
+    DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
+
+    mRenderer->SetCameraMatrices(view, proj);
 }
 
 void Game::render()
