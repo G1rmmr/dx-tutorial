@@ -56,7 +56,7 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         return false;
     }
 
-    mTicksCount = GetTickCount();
+    mTicksCount = GetTickCount64();
     mIsRunning = true;
 
     return true;
@@ -84,7 +84,7 @@ void Game::Run()
             break;
         }
 
-        DWORD currentTime = GetTickCount();
+        DWORD currentTime = GetTickCount64();
         float deltaTime = (currentTime - mTicksCount) / 1000.0f;
         
         if(deltaTime > 0.05f)
