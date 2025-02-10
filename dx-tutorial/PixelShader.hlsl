@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-float4 PS_Main(PS_INPUT input) : SV_TARGET
+float4 main(PS_INPUT input) : SV_TARGET
 {
     float3 amb = AmbColor;
     

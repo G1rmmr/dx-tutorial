@@ -2,50 +2,29 @@
 
 #include <windowsx.h>
 
+#include "Player.h"
+#include "Renderer.h"
+
 using namespace core;
 
-LRESULT CALLBACK Game::sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    Player mPlayer = mPlayer;
-    HWND mHwnd = mHwnd;
+HINSTANCE mHInstance;
+HWND mHwnd;
+DWORD mTicksCount;
 
-    switch(message)
-    {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
+Renderer* mRenderer;
+Player* mPlayer;
 
-    case WM_KEYDOWN:
-        break;
+int mScreenWidth;
+int mScreenHeight;
 
-    case WM_MOUSEMOVE:
-    {
-        // 마우스의 현재 위치를 얻고, 이전 위치와 비교해 이동량을 구합니다.
-        static int lastX = 0;
-        static int lastY = 0;
-
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-
-        int deltaX = x - lastX;
-        int deltaY = y - lastY;
-
-        mPlayer.ProcessMouseMovement((float)deltaX, (float)-deltaY);
-
-        lastX = x;
-        lastY = y;
-    }
-    return 0;
-    }
-
-    return DefWindowProc(mHwnd, message, wParam, lParam);
-}
+bool mIsRunning;
 
 Game::Game()
-    : mRenderer(nullptr)
+    : mHInstance(nullptr)
     , mHwnd(nullptr)
-    , mHInstance(nullptr)
     , mTicksCount(0)
+    , mRenderer(nullptr)
+    , mPlayer(nullptr)
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
@@ -77,45 +56,52 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         return false;
     }
 
-
+    mTicksCount = GetTickCount();
     mIsRunning = true;
+
     return true;
 }
 
 void Game::Run()
 {
-    MSG msg = {};
-    mTicksCount = GetTickCount64();
+    MSG msg = {0};
 
-    while(msg.message != WM_QUIT && mIsRunning)
+    while(mIsRunning)
     {
-        if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
+            if(msg.message == WM_QUIT)
+            {
+                mIsRunning = false;
+                break;
+            }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
+
+        if(!mIsRunning)
         {
-            DWORD currentTime = GetTickCount64();
-            float deltaTime = (currentTime - mTicksCount) * 0.001f;
-            mTicksCount = currentTime;
-
-            bool forwardKey = (GetAsyncKeyState('W') & 0x8000) != 0;
-            bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
-            bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
-            bool rightKey = (GetAsyncKeyState('D') & 0x8000) != 0;
-
-            mPlayer.ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
-
-            // Render();
+            break;
         }
+
+        DWORD currentTime = GetTickCount();
+        float deltaTime = (currentTime - mTicksCount) / 1000.0f;
+        
+        if(deltaTime > 0.05f)
+        {
+            deltaTime = 0.05f;
+        }
+            
+        mTicksCount = currentTime;
+
+        processInput(deltaTime);
+        update(deltaTime);
+        render();
     }
 }
 
 void Game::Cleanup()
 {
-    mIsRunning = false;
-
     if(mRenderer)
     {
         mRenderer->Cleanup();
@@ -132,10 +118,10 @@ void Game::Cleanup()
 
 bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow)
 {
-    WNDCLASSEX wc = {};
+    WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = sWindowProc;
+    wc.lpfnWndProc = sWindowProc; // 정적 함수
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -146,7 +132,7 @@ bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow
         return false;
     }
 
-    mHwnd = CreateWindowExW(
+    mHwnd = CreateWindowEx(
         0,
         wc.lpszClassName,
         L"DX11 Game",
@@ -156,7 +142,7 @@ bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow
         nullptr,
         nullptr,
         hInstance,
-        nullptr
+        this
     );
 
     if(!mHwnd)
@@ -170,28 +156,84 @@ bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow
     return true;
 }
 
-void Game::processInput()
+LRESULT CALLBACK Game::sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    
-}
+    Game* game = nullptr;
 
-void Game::update()
-{
-    DWORD currTicks = GetTickCount64();
-    float deltaTime = (currTicks - mTicksCount) / 1000.0f;
-
-    if(deltaTime > 0.05f)
+    if(message == WM_NCCREATE)
     {
-        deltaTime = 0.05f;
+        CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lParam);
+        game = static_cast<Game*>(cs->lpCreateParams);
+
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(game));
+    }
+    else
+    {
+        game = reinterpret_cast<Game*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
-    mTicksCount = currTicks;
+    if(game)
+    {
+        return game->windowProc(hwnd, message, wParam, lParam);
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch(message)
+    {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+
+    case WM_MOUSEMOVE:
+    {
+        static int lastX = 0;
+        static int lastY = 0;
+
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+
+        int deltaX = x - lastX;
+        int deltaY = y - lastY;
+
+        mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
+
+        lastX = x;
+        lastY = y;
+        return 0;
+    }
+
+    default:
+        break;
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+void Game::processInput(float deltaTime)
+{
+    bool forwardKey = (GetAsyncKeyState('W') & 0x8000) != 0;
+    bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
+    bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
+    bool rightKey = (GetAsyncKeyState('D') & 0x8000) != 0;
+
+    mPlayer->ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
+}
+
+void Game::update(float deltaTime)
+{
+
 }
 
 void Game::render()
 {
     if(mRenderer)
     {
+        mRenderer->BeginFrame(0.1f, 0.1f, 0.4f, 1.0f);
         mRenderer->Draw();
+        mRenderer->EndFrame();
     }
 }

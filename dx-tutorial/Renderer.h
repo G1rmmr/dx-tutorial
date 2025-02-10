@@ -6,6 +6,8 @@
 
 namespace core
 {
+    class Shader;
+
     class Renderer
     {
     public:
@@ -38,6 +40,7 @@ namespace core
         ID3D11DepthStencilState* mDepthStencilState;
 
         ID3D11RasterizerState* mRasterizerState;
-    };
 
+        Shader* mShader;
+    };
 }

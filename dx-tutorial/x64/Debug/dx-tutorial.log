@@ -1,3 +1,2 @@
-﻿FXC : error X3501: 'main': entrypoint not found
-  
-  compilation failed; no code produced
+﻿  Game.cpp
+  dx-tutorial.vcxproj -> C:\Users\G1\source\repos\dx-tutorial\x64\Debug\dx-tutorial.exe

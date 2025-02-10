@@ -1,4 +1,7 @@
 #include "Renderer.h"
+
+#include "Shader.h"
+
 #include <assert.h>
 
 using namespace core;
@@ -12,6 +15,7 @@ Renderer::Renderer()
     , mDepthStencilView(nullptr)
     , mDepthStencilState(nullptr)
     , mRasterizerState(nullptr)
+    , mShader(nullptr)
 {
 
 }
@@ -48,6 +52,12 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         return false;
     }
 
+    mShader = new Shader();
+    if(!mShader->Initialize(mDevice, L"VertexShader.hlsl", "VSMain", L"PixelShader.hlsl", "PSMain"))
+    {
+        return false;
+    }
+
     mDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
     D3D11_VIEWPORT viewport;
@@ -64,6 +74,13 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
 
 void Renderer::Cleanup()
 {
+    if(mShader)
+    {
+        mShader->Cleanup();
+        delete mShader;
+        mShader = nullptr;
+    }
+
     if(mRasterizerState)
     {
         mRasterizerState->Release();
@@ -128,6 +145,7 @@ void Renderer::EndFrame()
 
 void Renderer::Draw()
 {
+    mShader->SetShader(mDeviceContext);
     // 실제 드로우 호출이 들어갈 자리
     // ex) m_deviceContext->IASetInputLayout( ... );
     //     m_deviceContext->IASetVertexBuffers( ... );
@@ -160,6 +178,9 @@ bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
     swapChainDesc.Flags = 0;
 
     UINT createDeviceFlags = 0;
+#if defined(_DEBUG)
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 
     D3D_FEATURE_LEVEL featureLevels[] =
     {
@@ -167,6 +188,7 @@ bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
         D3D_FEATURE_LEVEL_10_1,
         D3D_FEATURE_LEVEL_10_0
     };
+
     D3D_FEATURE_LEVEL featureLevel;
 
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
