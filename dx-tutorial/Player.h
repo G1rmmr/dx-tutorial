@@ -2,6 +2,9 @@
 
 #include <DirectXMath.h>
 
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+
 namespace core
 {
 	class Player
@@ -15,12 +18,24 @@ namespace core
         DirectX::XMMATRIX GetViewMatrix() const;
 		void UpdateCameraVectors();
 
+		void SyncPhysics();
+
+		inline btRigidBody* GetRigidBody() const
+		{
+			return mRigidBody;
+		}
+
+
 	private:
 		DirectX::XMFLOAT3 mPos;
 
 		DirectX::XMFLOAT3 mForward;
 		DirectX::XMFLOAT3 mRight;
 		DirectX::XMFLOAT3 mUp;
+
+		btRigidBody* mRigidBody;
+		btCollisionShape* mCollisionShape;
+		btDefaultMotionState* mMotionState;
 
 		float mYaw;
 		float mPitch;

@@ -12,8 +12,29 @@ Player::Player()
 	, mUp(0.f, 1.f, 0.f)
 	, mMovementSpeed(5.f)
 	, mMouseSensitivity(0.1f)
+	, mRigidBody(nullptr)
+	, mCollisionShape(nullptr)
+	, mMotionState(nullptr)
 {
+	btTransform startTransform;
+	startTransform.setIdentity();
+	startTransform.setOrigin(btVector3(0.0f, 1.0f, 0.0f));
 
+	mCollisionShape = new btBoxShape(btVector3(0.5f, 1.0f, 0.5f));
+
+	btScalar mass = 80.0f;
+	bool isDynamic = (mass != 0.0f);
+
+	btVector3 localInertia(0, 0, 0);
+	if(isDynamic)
+	{
+		mCollisionShape->calculateLocalInertia(mass, localInertia);
+	}
+		
+	mMotionState = new btDefaultMotionState(startTransform);
+
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, mMotionState, mCollisionShape, localInertia);
+	mRigidBody = new btRigidBody(rbInfo);
 }
 
 void Player::ProcessMouseMovement(float xOffset, float yOffset)
@@ -99,4 +120,17 @@ void Player::UpdateCameraVectors()
 	XMStoreFloat3(&mForward, forward);
 	XMStoreFloat3(&mRight, right);
 	XMStoreFloat3(&mUp, up);
+}
+
+void Player::SyncPhysics()
+{
+	if(mRigidBody && mRigidBody->getMotionState())
+	{
+		btTransform trans;
+		mRigidBody->getMotionState()->getWorldTransform(trans);
+		btVector3 origin = trans.getOrigin();
+		mPos.x = origin.getX();
+		mPos.y = origin.getY();
+		mPos.z = origin.getZ();
+	}
 }

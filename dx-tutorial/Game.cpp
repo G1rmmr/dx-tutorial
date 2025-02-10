@@ -254,6 +254,7 @@ void Game::processInput(float deltaTime)
 
 void Game::update(float deltaTime)
 {
+    mPlayer->SyncPhysics();
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
     constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
