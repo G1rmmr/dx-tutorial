@@ -6,6 +6,7 @@ namespace core
 {
     class Renderer;
     class Player;
+    class Physics;
 
     class Game
     {
@@ -24,8 +25,8 @@ namespace core
 
         bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
 
-        void processInput(float deltaTime);
-        void update(float deltaTime);
+        void processInput(const float deltaTime);
+        void update(const float deltaTime);
         void render();
 
     private:
@@ -36,6 +37,7 @@ namespace core
 
         Renderer* mRenderer;
         Player* mPlayer;
+        Physics* mPhysics;
 
         int mScreenWidth;
         int mScreenHeight;

@@ -18,7 +18,7 @@ Player::Player()
 {
 	btTransform startTransform;
 	startTransform.setIdentity();
-	startTransform.setOrigin(btVector3(0.0f, 1.0f, 0.0f));
+	startTransform.setOrigin(btVector3(0.0f, 3.0f, 0.0f));
 
 	mCollisionShape = new btBoxShape(btVector3(0.5f, 1.0f, 0.5f));
 
@@ -60,33 +60,40 @@ void Player::ProcessMouseMovement(float xOffset, float yOffset)
 
 void Player::ProcessKeyboard(bool forwardKey, bool backKey, bool leftKey, bool rightKey, float deltaTime)
 {
-	float vel = mMovementSpeed * deltaTime;
-
-	XMVECTOR pos = XMLoadFloat3(&mPos);
-	XMVECTOR forward = XMLoadFloat3(&mForward);
-	XMVECTOR right = XMLoadFloat3(&mRight);
+	btVector3 moveDir(0, 0, 0);
 
 	if(forwardKey)
 	{
-		pos = XMVectorAdd(pos, XMVectorScale(forward, vel));
+		moveDir += btVector3(mForward.x, mForward.y, mForward.z);
 	}
 		
 	if(backKey)
 	{
-		pos = XMVectorSubtract(pos, XMVectorScale(forward, vel));
+		moveDir -= btVector3(mForward.x, mForward.y, mForward.z);
 	}
 		
 	if(leftKey)
 	{
-		pos = XMVectorSubtract(pos, XMVectorScale(right, vel));
+		moveDir -= btVector3(mRight.x, mRight.y, mRight.z);
 	}
-
+		
 	if(rightKey)
 	{
-		pos = XMVectorAdd(pos, XMVectorScale(right, vel));
+		moveDir += btVector3(mRight.x, mRight.y, mRight.z);
 	}
+		
 
-	DirectX::XMStoreFloat3(&mPos, pos);
+	if(moveDir.length2() > 0)
+	{
+		moveDir.normalize();
+		float speed = mMovementSpeed;
+		btVector3 velocity = moveDir * speed;
+		mRigidBody->setLinearVelocity(velocity);
+	}
+	else
+	{
+		mRigidBody->setLinearVelocity(btVector3(0, mRigidBody->getLinearVelocity().getY(), 0));
+	}
 }
 
 XMMATRIX Player::GetViewMatrix() const

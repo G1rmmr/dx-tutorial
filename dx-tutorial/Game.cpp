@@ -4,6 +4,7 @@
 
 #include "Player.h"
 #include "Renderer.h"
+#include "Physics.h"
 
 using namespace core;
 
@@ -13,6 +14,7 @@ DWORD mTicksCount;
 
 Renderer* mRenderer;
 Player* mPlayer;
+Physics* mPhysics;
 
 int mScreenWidth;
 int mScreenHeight;
@@ -28,6 +30,7 @@ Game::Game()
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
+    , mPhysics(nullptr)
 {
 
 }
@@ -43,7 +46,32 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mScreenWidth = width;
     mScreenHeight = height;
 
+    mPhysics = new Physics();
+
+    btTransform startTransform;
+    startTransform.setIdentity();
+    startTransform.setOrigin(btVector3(0.0f, -1.0f, 0.0f));
+
+    btCollisionShape* shape = new btBoxShape(btVector3(20.f, 1.0f, 20.f));
+
+    btScalar mass = 0.f;
+    bool isDynamic = (mass != 0.0f);
+
+    btVector3 localInertia(0, 0, 0);
+    if(isDynamic)
+    {
+        shape->calculateLocalInertia(mass, localInertia);
+    }
+
+    btDefaultMotionState*  motionState = new btDefaultMotionState(startTransform);
+
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
+    btRigidBody* floor = new btRigidBody(rbInfo);
+
+    mPhysics->AddRigidBody(floor);
+
     mPlayer = new Player();
+    mPhysics->AddRigidBody(mPlayer->GetRigidBody());
 
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
@@ -252,9 +280,11 @@ void Game::processInput(float deltaTime)
     mPlayer->ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
 }
 
-void Game::update(float deltaTime)
+void Game::update(const float deltaTime)
 {
-    // mPlayer->SyncPhysics();
+    mPhysics->Update(deltaTime);
+    mPlayer->SyncPhysics();
+
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
     constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
