@@ -129,7 +129,7 @@ bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = sWindowProc; // 정적 함수
+    wc.lpfnWndProc = sWindowProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -254,7 +254,7 @@ void Game::processInput(float deltaTime)
 
 void Game::update(float deltaTime)
 {
-    mPlayer->SyncPhysics();
+    // mPlayer->SyncPhysics();
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
     constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
@@ -271,7 +271,7 @@ void Game::render()
 {
     if(mRenderer)
     {
-        mRenderer->BeginFrame(0.1f, 0.1f, 0.4f, 1.0f);
+        mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
         mRenderer->Draw();
         mRenderer->EndFrame();
     }

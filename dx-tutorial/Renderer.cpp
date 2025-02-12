@@ -28,7 +28,7 @@ Renderer::Renderer()
     , mDepthStencilState(nullptr)
     , mRasterizerState(nullptr)
     , mShader(nullptr)
-    , mTriangleVertexBuffer(nullptr)
+    , mFloorVertex(nullptr)
     , mInputLayout(nullptr)
     , mMatrixBuffer(nullptr)
 {
@@ -110,6 +110,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         return false;
     }
 
+    /*
     Vertex triangleVertices[] =
     {
         { DirectX::XMFLOAT3(0.f,  0.5f, 0.f), DirectX::XMFLOAT4(1, 0, 0, 1) },
@@ -130,6 +131,36 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     if(FAILED(hr))
     {
         MessageBox(nullptr, L"Failed to create triangle vertex buffer.", L"Error", MB_OK);
+        return false;
+    }
+
+    mDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+    */
+
+    Vertex floorVertices[] =
+    {
+        { DirectX::XMFLOAT3(10.f, -1.f,  10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) },
+        { DirectX::XMFLOAT3(10.f, -1.f,  -10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) },
+        { DirectX::XMFLOAT3(-10.f, -1.f, -10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) },
+
+        { DirectX::XMFLOAT3(-10.f, -1.f,  10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) },
+        { DirectX::XMFLOAT3(10.f, -1.f,  10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) },
+        { DirectX::XMFLOAT3(-10.f, -1.f, -10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) }
+    };
+
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(floorVertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = floorVertices;
+
+    hr = mDevice->CreateBuffer(&bd, &initData, &mFloorVertex);
+    if(FAILED(hr))
+    {
+        MessageBox(nullptr, L"Failed to create floor vertex buffer.", L"Error", MB_OK);
         return false;
     }
 
@@ -206,10 +237,10 @@ void Renderer::Cleanup()
         mDevice = nullptr;
     }
 
-    if(mTriangleVertexBuffer)
+    if(mFloorVertex)
     {
-        mTriangleVertexBuffer->Release();
-        mTriangleVertexBuffer = nullptr;
+        mFloorVertex->Release();
+        mFloorVertex = nullptr;
     }
 
     if(mInputLayout)
@@ -229,7 +260,7 @@ void Renderer::BeginFrame(float red, float green, float blue, float alpha)
 {
     mDeviceContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
-    float clearColor[4] = {0.f, 0.f, 0.f, 1.f};
+    float clearColor[4] = {red, green, blue, alpha};
     mDeviceContext->ClearRenderTargetView(mRenderTargetView, clearColor);
 
     mDeviceContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -250,11 +281,11 @@ void Renderer::Draw()
     // 정점 버퍼, 토폴로지 지정
     UINT stride = sizeof(Vertex); // 혹은 XMFLOAT3 + XMFLOAT4
     UINT offset = 0;
-    mDeviceContext->IASetVertexBuffers(0, 1, &mTriangleVertexBuffer, &stride, &offset);
+    mDeviceContext->IASetVertexBuffers(0, 1, &mFloorVertex, &stride, &offset);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // 드로우
-    mDeviceContext->Draw(3, 0);
+    mDeviceContext->Draw(6, 0);
 }
 
 bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
