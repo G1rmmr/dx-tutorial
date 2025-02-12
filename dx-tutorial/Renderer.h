@@ -45,7 +45,7 @@ namespace core
 
         ID3D11Buffer* mMatrixBuffer;
 
-        ID3D11Buffer* mTriangleVertexBuffer;
+        ID3D11Buffer* mFloorVertex;
         ID3D11InputLayout* mInputLayout;
 
         Shader* mShader;

@@ -4,6 +4,7 @@
 
 #include "Player.h"
 #include "Renderer.h"
+#include "Physics.h"
 
 using namespace core;
 
@@ -13,6 +14,7 @@ DWORD mTicksCount;
 
 Renderer* mRenderer;
 Player* mPlayer;
+Physics* mPhysics;
 
 int mScreenWidth;
 int mScreenHeight;
@@ -28,6 +30,7 @@ Game::Game()
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
+    , mPhysics(nullptr)
 {
 
 }
@@ -43,7 +46,32 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mScreenWidth = width;
     mScreenHeight = height;
 
+    mPhysics = new Physics();
+
+    btTransform startTransform;
+    startTransform.setIdentity();
+    startTransform.setOrigin(btVector3(0.0f, -1.0f, 0.0f));
+
+    btCollisionShape* shape = new btBoxShape(btVector3(20.f, 1.0f, 20.f));
+
+    btScalar mass = 0.f;
+    bool isDynamic = (mass != 0.0f);
+
+    btVector3 localInertia(0, 0, 0);
+    if(isDynamic)
+    {
+        shape->calculateLocalInertia(mass, localInertia);
+    }
+
+    btDefaultMotionState*  motionState = new btDefaultMotionState(startTransform);
+
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
+    btRigidBody* floor = new btRigidBody(rbInfo);
+
+    mPhysics->AddRigidBody(floor);
+
     mPlayer = new Player();
+    mPhysics->AddRigidBody(mPlayer->GetRigidBody());
 
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
@@ -129,7 +157,7 @@ bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = sWindowProc; // 정적 함수
+    wc.lpfnWndProc = sWindowProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -252,8 +280,11 @@ void Game::processInput(float deltaTime)
     mPlayer->ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
 }
 
-void Game::update(float deltaTime)
+void Game::update(const float deltaTime)
 {
+    mPhysics->Update(deltaTime);
+    mPlayer->SyncPhysics();
+
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
     constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
@@ -270,7 +301,7 @@ void Game::render()
 {
     if(mRenderer)
     {
-        mRenderer->BeginFrame(0.1f, 0.1f, 0.4f, 1.0f);
+        mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
         mRenderer->Draw();
         mRenderer->EndFrame();
     }
