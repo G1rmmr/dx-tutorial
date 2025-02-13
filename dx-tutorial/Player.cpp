@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include <windows.h>
+
 using namespace core;
 using namespace DirectX;
 
@@ -35,6 +37,11 @@ Player::Player()
 
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, mMotionState, mCollisionShape, localInertia);
 	mRigidBody = new btRigidBody(rbInfo);
+
+	mRigidBody->activate(true);
+	mRigidBody->forceActivationState(DISABLE_DEACTIVATION);
+	mRigidBody->setFriction(0.3f);
+	mRigidBody->setDamping(0.f, 0.f);
 }
 
 void Player::ProcessMouseMovement(float xOffset, float yOffset)
@@ -58,7 +65,9 @@ void Player::ProcessMouseMovement(float xOffset, float yOffset)
 	UpdateCameraVectors();
 }
 
-void Player::ProcessKeyboard(bool forwardKey, bool backKey, bool leftKey, bool rightKey, float deltaTime)
+void Player::ProcessKeyboard(
+	btDynamicsWorld* world, const float deltaTime,
+	bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey)
 {
 	btVector3 moveDir(0, 0, 0);
 
@@ -93,6 +102,11 @@ void Player::ProcessKeyboard(bool forwardKey, bool backKey, bool leftKey, bool r
 	else
 	{
 		mRigidBody->setLinearVelocity(btVector3(0, mRigidBody->getLinearVelocity().getY(), 0));
+	}
+
+	if(jumpKey && isOnGround(world))
+	{
+		jump();
 	}
 }
 
@@ -140,4 +154,36 @@ void Player::SyncPhysics()
 		mPos.y = origin.getY();
 		mPos.z = origin.getZ();
 	}
+}
+
+bool Player::isOnGround(btDynamicsWorld* world, float rayLength)
+{
+	if(!mRigidBody)
+	{
+		return false;
+	}
+
+	btVector3 start(mPos.x, mPos.y - 0.5f, mPos.z);
+	btVector3 end = start - btVector3(0, rayLength, 0);
+
+	btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+	world->rayTest(start, end, rayCallback);
+
+	if(rayCallback.hasHit())
+	{
+		return true;
+	}
+	return false;
+}
+
+void Player::jump(const float velocity)
+{
+	if(!mRigidBody)
+	{
+		return;
+	}
+
+	btVector3 vel = mRigidBody->getLinearVelocity();
+	vel.setY(velocity);
+	mRigidBody->setLinearVelocity(vel);
 }

@@ -276,8 +276,10 @@ void Game::processInput(float deltaTime)
     bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
     bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
     bool rightKey = (GetAsyncKeyState('D') & 0x8000) != 0;
+    bool jumpKey = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
 
-    mPlayer->ProcessKeyboard(forwardKey, backKey, leftKey, rightKey, deltaTime);
+    mPlayer->ProcessKeyboard(mPhysics->GetDynamicsWorld(), deltaTime,
+        forwardKey, backKey, leftKey, rightKey, jumpKey);
 }
 
 void Game::update(const float deltaTime)

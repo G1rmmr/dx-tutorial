@@ -13,7 +13,9 @@ namespace core
         Player();
 
         void ProcessMouseMovement(float xOffset, float yOffset);
-        void ProcessKeyboard(bool forwardKey, bool backKey, bool leftKey, bool rightKey, float deltaTime);
+
+		void ProcessKeyboard(btDynamicsWorld* world, const float deltaTime,
+			bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey);
 
         DirectX::XMMATRIX GetViewMatrix() const;
 		void UpdateCameraVectors();
@@ -25,6 +27,10 @@ namespace core
 			return mRigidBody;
 		}
 
+	private:
+		bool isOnGround(btDynamicsWorld* world, float rayLength = 4.f);
+
+		void jump(const float velocity = 3.f);
 
 	private:
 		DirectX::XMFLOAT3 mPos;
