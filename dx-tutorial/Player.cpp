@@ -64,22 +64,22 @@ void Player::ProcessKeyboard(bool forwardKey, bool backKey, bool leftKey, bool r
 
 	if(forwardKey)
 	{
-		moveDir += btVector3(mForward.x, mForward.y, mForward.z);
+		moveDir += btVector3(mForward.x, 0.f, mForward.z);
 	}
 		
 	if(backKey)
 	{
-		moveDir -= btVector3(mForward.x, mForward.y, mForward.z);
+		moveDir -= btVector3(mForward.x, 0.f, mForward.z);
 	}
 		
 	if(leftKey)
 	{
-		moveDir -= btVector3(mRight.x, mRight.y, mRight.z);
+		moveDir -= btVector3(mRight.x, 0.f, mRight.z);
 	}
 		
 	if(rightKey)
 	{
-		moveDir += btVector3(mRight.x, mRight.y, mRight.z);
+		moveDir += btVector3(mRight.x, 0.f, mRight.z);
 	}
 		
 
