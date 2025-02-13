@@ -28,7 +28,7 @@ namespace core
 		}
 
 	private:
-		bool isOnGround(btDynamicsWorld* world, float rayLength = 4.f);
+		bool isOnGround(btDynamicsWorld* world, float rayLength = 1.f);
 
 		void jump(const float velocity = 3.f);
 

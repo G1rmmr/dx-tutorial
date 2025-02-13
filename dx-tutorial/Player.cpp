@@ -69,44 +69,48 @@ void Player::ProcessKeyboard(
 	btDynamicsWorld* world, const float deltaTime,
 	bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey)
 {
-	btVector3 moveDir(0, 0, 0);
+	if(isOnGround(world))
+	{
+		btVector3 moveDir(0, 0, 0);
 
-	if(forwardKey)
-	{
-		moveDir += btVector3(mForward.x, 0.f, mForward.z);
-	}
-		
-	if(backKey)
-	{
-		moveDir -= btVector3(mForward.x, 0.f, mForward.z);
-	}
-		
-	if(leftKey)
-	{
-		moveDir -= btVector3(mRight.x, 0.f, mRight.z);
-	}
-		
-	if(rightKey)
-	{
-		moveDir += btVector3(mRight.x, 0.f, mRight.z);
-	}
-		
+		if(forwardKey)
+		{
+			moveDir += btVector3(mForward.x, 0.f, mForward.z);
+		}
 
-	if(moveDir.length2() > 0)
-	{
-		moveDir.normalize();
-		float speed = mMovementSpeed;
-		btVector3 velocity = moveDir * speed;
-		mRigidBody->setLinearVelocity(velocity);
-	}
-	else
-	{
-		mRigidBody->setLinearVelocity(btVector3(0, mRigidBody->getLinearVelocity().getY(), 0));
-	}
+		if(backKey)
+		{
+			moveDir -= btVector3(mForward.x, 0.f, mForward.z);
+		}
 
-	if(jumpKey && isOnGround(world))
-	{
-		jump();
+		if(leftKey)
+		{
+			moveDir -= btVector3(mRight.x, 0.f, mRight.z);
+		}
+
+		if(rightKey)
+		{
+			moveDir += btVector3(mRight.x, 0.f, mRight.z);
+		}
+
+		if(jumpKey)
+		{
+			jump();
+		}
+
+
+		if(moveDir.length2() > 0)
+		{
+			moveDir.normalize();
+			float speed = mMovementSpeed;
+			btVector3 velocity = moveDir * speed;
+			mRigidBody->setLinearVelocity(velocity);
+		}
+		else
+		{
+			mRigidBody->setLinearVelocity(
+				btVector3(0, mRigidBody->getLinearVelocity().getY(), 0));
+		}
 	}
 }
 
