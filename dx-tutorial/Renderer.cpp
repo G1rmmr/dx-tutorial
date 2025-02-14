@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "Shader.h"
+#include "Enemy.h"
 
 #include <assert.h>
 
@@ -14,8 +15,69 @@ struct Vertex
 
 struct MatrixBuffer
 {
+    DirectX::XMMATRIX World;
     DirectX::XMMATRIX View;
     DirectX::XMMATRIX Proj;
+};
+
+using namespace DirectX;
+
+// Enemy
+Vertex cubeVertices[] =
+{
+    // 앞면 (Front)
+    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+
+    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
+
+    // 뒷면 (Back)
+    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+
+    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
+
+    // 왼쪽면 (Left)
+    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
+    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
+    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
+
+    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
+    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
+    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
+
+    // 오른쪽면 (Right)
+    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
+
+    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
+    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
+
+    // 윗면 (Top)
+    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
+    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
+
+    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
+    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
+    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
+
+    // 아랫면 (Bottom)
+    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
+    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
+    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
+
+    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
+    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
+    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
 };
 
 Renderer::Renderer()
@@ -148,16 +210,33 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         { DirectX::XMFLOAT3(-10.f, -1.f, -10.f), DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1) }
     };
 
-    D3D11_BUFFER_DESC bd = {};
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(floorVertices);
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    bd.CPUAccessFlags = 0;
+    D3D11_BUFFER_DESC fbd = {};
+    fbd.Usage = D3D11_USAGE_DEFAULT;
+    fbd.ByteWidth = sizeof(floorVertices);
+    fbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    fbd.CPUAccessFlags = 0;
 
     D3D11_SUBRESOURCE_DATA initData = {};
     initData.pSysMem = floorVertices;
 
-    hr = mDevice->CreateBuffer(&bd, &initData, &mFloorVertex);
+    hr = mDevice->CreateBuffer(&fbd, &initData, &mFloorVertex);
+    if(FAILED(hr))
+    {
+        MessageBox(nullptr, L"Failed to create floor vertex buffer.", L"Error", MB_OK);
+        return false;
+    }
+
+    //Enemy
+    D3D11_BUFFER_DESC ebd = {};
+    ebd.Usage = D3D11_USAGE_DEFAULT;
+    ebd.ByteWidth = sizeof(cubeVertices);
+    ebd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    ebd.CPUAccessFlags = 0;
+
+    initData = {};
+    initData.pSysMem = cubeVertices;
+
+    hr = mDevice->CreateBuffer(&ebd, &initData, &mEnemyVertex);
     if(FAILED(hr))
     {
         MessageBox(nullptr, L"Failed to create floor vertex buffer.", L"Error", MB_OK);
@@ -254,6 +333,12 @@ void Renderer::Cleanup()
         mMatrixBuffer->Release();
         mMatrixBuffer = nullptr;
     }
+
+    if(mEnemyVertex)
+    {
+        mEnemyVertex->Release();
+        mEnemyVertex = nullptr;
+    }
 }
 
 void Renderer::BeginFrame(float red, float green, float blue, float alpha)
@@ -271,21 +356,53 @@ void Renderer::EndFrame()
     mSwapChain->Present(1, 0);
 }
 
-void Renderer::Draw()
+void Renderer::Draw(Enemy* enemy)
 {
+    using namespace DirectX;
+
+    // 1) 셰이더 설정
     mShader->SetShader(mDeviceContext);
 
-    // Input Layout 지정
+    // 2) 입력 레이아웃 설정
     mDeviceContext->IASetInputLayout(mInputLayout);
 
-    // 정점 버퍼, 토폴로지 지정
-    UINT stride = sizeof(Vertex); // 혹은 XMFLOAT3 + XMFLOAT4
-    UINT offset = 0;
-    mDeviceContext->IASetVertexBuffers(0, 1, &mFloorVertex, &stride, &offset);
-    mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // 3) 바닥(floor) 먼저 렌더링
+    {
+        UINT stride = sizeof(Vertex);
+        UINT offset = 0;
+        mDeviceContext->IASetVertexBuffers(0, 1, &mFloorVertex, &stride, &offset);
+        mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        mDeviceContext->Draw(6, 0);
+    }
 
-    // 드로우
-    mDeviceContext->Draw(6, 0);
+    // 4) Enemy의 위치에 따른 월드 행렬 계산
+    XMMATRIX translation = XMMatrixTranslation(enemy->GetPos().x,
+        enemy->GetPos().y,
+        enemy->GetPos().z);
+    XMMATRIX rotation = XMMatrixIdentity(); // 필요 시 적절한 회전 행렬
+    XMMATRIX scale = XMMatrixScaling(1.f, 1.f, 1.f); // Enemy 큐브 크기 조정 가능
+
+    XMMATRIX worldMatrix = scale * rotation * translation;
+
+    // 5) 한 번에 World/View/Proj를 상수 버퍼에 담기
+    MatrixBuffer bufData = {};
+    bufData.World = XMMatrixTranspose(worldMatrix);
+    bufData.View = XMMatrixTranspose(mView);  // SetCameraMatrices에서 저장된 뷰
+    bufData.Proj = XMMatrixTranspose(mProj);  // SetCameraMatrices에서 저장된 프로젝션
+
+    mDeviceContext->UpdateSubresource(mMatrixBuffer, 0, nullptr, &bufData, 0, 0);
+
+    // 6) 셰이더에 상수 버퍼 연결
+    mDeviceContext->VSSetConstantBuffers(0, 1, &mMatrixBuffer);
+
+    // 7) Enemy용 큐브 버퍼를 바인딩하고 드로우
+    {
+        UINT stride = sizeof(Vertex);
+        UINT offset = 0;
+        mDeviceContext->IASetVertexBuffers(0, 1, &mEnemyVertex, &stride, &offset);
+        mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        mDeviceContext->Draw(36, 0);
+    }
 }
 
 bool Renderer::createDeviceAndSwapChain(HWND hWnd, int width, int height)
@@ -447,22 +564,6 @@ bool Renderer::createRasterizerState()
 
 void Renderer::SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj)
 {
-    MatrixBuffer bufData = {};
-
-    bufData.View = DirectX::XMMatrixTranspose(view);
-    bufData.Proj = DirectX::XMMatrixTranspose(proj);
-
-    mDeviceContext->UpdateSubresource(
-        mMatrixBuffer,
-        0,
-        nullptr,
-        &bufData,
-        0, 0
-    );
-
-    mDeviceContext->VSSetConstantBuffers(
-        0,
-        1,
-        &mMatrixBuffer
-    );
+    mView = view;
+    mProj = proj;
 }

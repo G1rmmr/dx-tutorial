@@ -7,6 +7,7 @@ namespace core
     class Renderer;
     class Player;
     class Physics;
+    class Enemy;
 
     class Game
     {
@@ -38,6 +39,7 @@ namespace core
         Renderer* mRenderer;
         Player* mPlayer;
         Physics* mPhysics;
+        Enemy* mEnemy;
 
         int mScreenWidth;
         int mScreenHeight;

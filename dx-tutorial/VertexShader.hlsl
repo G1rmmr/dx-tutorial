@@ -1,5 +1,6 @@
 cbuffer MatrixBuffer : register(b0)
 {
+    float4x4 World;
     float4x4 View;
     float4x4 Proj;
 };
@@ -21,11 +22,14 @@ VS_OUTPUT VSMain(VS_INPUT input)
 {
     VS_OUTPUT output;
     
-    float4 posWorld = float4(input.Pos, 1.0f);
+    float4 pos = float4(input.Pos, 1.0f);
     
-    float4 posView = mul(posWorld, View);
-    output.Pos = mul(posView, Proj);
-    
+    pos = mul(pos, World);
+    pos = mul(pos, View);
+    pos = mul(pos, Proj);
+
+    output.Pos = pos;
     output.Color = input.Color;
+    
     return output;
 }
