@@ -69,9 +69,14 @@ void Player::ProcessKeyboard(
 	btDynamicsWorld* world, const float deltaTime,
 	bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey)
 {
-	if(isOnGround(world))
+	if(bIsOnGround)
 	{
 		btVector3 moveDir(0, 0, 0);
+
+		if(jumpKey)
+		{
+			jump(moveDir, 5.f);
+		}
 
 		if(forwardKey)
 		{
@@ -93,12 +98,6 @@ void Player::ProcessKeyboard(
 			moveDir += btVector3(mRight.x, 0.f, mRight.z);
 		}
 
-		if(jumpKey)
-		{
-			jump();
-		}
-
-
 		if(moveDir.length2() > 0)
 		{
 			moveDir.normalize();
@@ -112,6 +111,7 @@ void Player::ProcessKeyboard(
 				btVector3(0, mRigidBody->getLinearVelocity().getY(), 0));
 		}
 	}
+	bIsOnGround = isOnGround(world);
 }
 
 XMMATRIX Player::GetViewMatrix() const
@@ -180,14 +180,13 @@ bool Player::isOnGround(btDynamicsWorld* world, float rayLength)
 	return false;
 }
 
-void Player::jump(const float velocity)
+void Player::jump(btVector3& dir, const float velocity)
 {
 	if(!mRigidBody)
 	{
 		return;
 	}
 
-	btVector3 vel = mRigidBody->getLinearVelocity();
-	vel.setY(velocity);
-	mRigidBody->setLinearVelocity(vel);
+	dir = mRigidBody->getLinearVelocity();
+	dir.setY(velocity);
 }

@@ -28,9 +28,9 @@ namespace core
 		}
 
 	private:
-		bool isOnGround(btDynamicsWorld* world, float rayLength = 1.f);
+		bool isOnGround(btDynamicsWorld* world, float rayLength = 0.5f);
 
-		void jump(const float velocity = 3.f);
+		void jump(btVector3& dir, const float velocity = 3.f);
 
 	private:
 		DirectX::XMFLOAT3 mPos;
@@ -48,5 +48,7 @@ namespace core
 
 		float mMovementSpeed;
 		float mMouseSensitivity;
+
+		bool bIsOnGround = false;
 	};
 }
