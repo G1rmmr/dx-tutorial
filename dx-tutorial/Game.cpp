@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Renderer.h"
 #include "Physics.h"
+#include "Enemy.h"
 
 using namespace core;
 
@@ -14,6 +15,7 @@ DWORD mTicksCount;
 
 Renderer* mRenderer;
 Player* mPlayer;
+Enemy* mEnemy;
 Physics* mPhysics;
 
 int mScreenWidth;
@@ -27,6 +29,7 @@ Game::Game()
     , mTicksCount(0)
     , mRenderer(nullptr)
     , mPlayer(nullptr)
+    , mEnemy(nullptr)
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
@@ -72,6 +75,9 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
 
     mPlayer = new Player();
     mPhysics->AddRigidBody(mPlayer->GetRigidBody());
+
+    mEnemy = new Enemy();
+    mPhysics->AddRigidBody(mEnemy->GetRigidBody());
 
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
@@ -286,6 +292,7 @@ void Game::update(const float deltaTime)
 {
     mPhysics->Update(deltaTime);
     mPlayer->SyncPhysics();
+    mEnemy->SyncPhysics();
 
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
@@ -304,7 +311,7 @@ void Game::render()
     if(mRenderer)
     {
         mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
-        mRenderer->Draw();
+        mRenderer->Draw(mEnemy);
         mRenderer->EndFrame();
     }
 }

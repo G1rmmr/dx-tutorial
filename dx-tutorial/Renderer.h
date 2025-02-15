@@ -7,6 +7,7 @@
 namespace core
 {
     class Shader;
+    class Enemy;
 
     class Renderer
     {
@@ -20,7 +21,7 @@ namespace core
         void BeginFrame(float red, float green, float blue, float alpha);
         void EndFrame();
 
-        void Draw();
+        void Draw(Enemy* enemy);
 
         void SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj);
 
@@ -45,7 +46,11 @@ namespace core
 
         ID3D11Buffer* mMatrixBuffer;
 
+        DirectX::XMMATRIX mView;
+        DirectX::XMMATRIX mProj;
+
         ID3D11Buffer* mFloorVertex;
+        ID3D11Buffer* mEnemyVertex;
         ID3D11InputLayout* mInputLayout;
 
         Shader* mShader;
