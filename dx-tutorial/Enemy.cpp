@@ -15,7 +15,7 @@ Enemy::Enemy()
 
 	mCollisionShape = new btBoxShape(btVector3(0.5f, 1.0f, 0.5f));
 
-	btScalar mass = 80.0f;
+	btScalar mass = 80.f;
 	bool isDynamic = (mass != 0.0f);
 
 	btVector3 localInertia(0, 0, 0);
