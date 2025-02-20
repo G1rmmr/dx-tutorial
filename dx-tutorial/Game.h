@@ -1,14 +1,10 @@
 #pragma once
 
+#include <vector>
 #include <Windows.h>
 
 namespace core
 {
-    class Renderer;
-    class Player;
-    class Physics;
-    class Enemy;
-
     class Game
     {
     public:
@@ -31,15 +27,15 @@ namespace core
         void render();
 
     private:
-        
+        std::vector<class Actor*> mActors;
+
         HINSTANCE mHInstance;
         HWND mHwnd;
         ULONGLONG mTicksCount;
 
-        Renderer* mRenderer;
-        Player* mPlayer;
-        Physics* mPhysics;
-        Enemy* mEnemy;
+        class Renderer* mRenderer;
+        class Player* mPlayer;
+        class Physics* mPhysics;
 
         int mScreenWidth;
         int mScreenHeight;

@@ -2,6 +2,7 @@
 
 #include <windowsx.h>
 
+#include "Actor.h"
 #include "Player.h"
 #include "Renderer.h"
 #include "Physics.h"
@@ -76,9 +77,6 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mPlayer = new Player();
     mPhysics->AddRigidBody(mPlayer->GetRigidBody());
 
-    mEnemy = new Enemy();
-    mPhysics->AddRigidBody(mEnemy->GetRigidBody());
-
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
         return false;
@@ -91,6 +89,10 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         mRenderer = nullptr;
         return false;
     }
+
+    auto enemy = new Enemy();
+    mActors.emplace_back(enemy);
+    mPhysics->AddRigidBody(enemy->GetRigidBody());
 
     mTicksCount = GetTickCount64();
     mIsRunning = true;

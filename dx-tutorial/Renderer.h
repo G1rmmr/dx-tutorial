@@ -1,15 +1,15 @@
 #pragma once
 
+#include <vector>
+
 #include <Windows.h>
 #include <d3d11.h>
 #include <DirectXMath.h>
 
+#include "Actor.h"
+
 namespace core
 {
-    class Shader;
-    class Enemy;
-    class Pipeline;
-
     class Renderer
     {
     public:
@@ -22,22 +22,19 @@ namespace core
         void BeginFrame(float red, float green, float blue, float alpha);
         void EndFrame();
 
-        void Draw(Enemy* enemy);
+        void Draw(std::vector<Actor*>& actors);
 
         void SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj);
 
     private:
-        Pipeline* mPipeline;
+        class Pipeline* mPipeline;
+        class Shader* mShader;
 
         ID3D11Buffer* mMatrixBuffer;
 
         DirectX::XMMATRIX mView;
         DirectX::XMMATRIX mProj;
 
-        ID3D11Buffer* mFloorVertex;
-        ID3D11Buffer* mEnemyVertex;
         ID3D11InputLayout* mInputLayout;
-
-        Shader* mShader;
     };
 }
