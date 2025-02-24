@@ -8,6 +8,7 @@
 #include "Physics.h"
 #include "Enemy.h"
 #include "Floor.h"
+#include "UI.h"
 
 using namespace DirectX;
 using namespace core;
@@ -20,6 +21,7 @@ Renderer* mRenderer;
 Player* mPlayer;
 Enemy* mEnemy;
 Physics* mPhysics;
+UI* mUI;
 
 int mScreenWidth;
 int mScreenHeight;
@@ -41,6 +43,8 @@ Game::Game()
     , mScreenHeight(0)
     , mIsRunning(false)
     , mPhysics(nullptr)
+    , mScore(0)
+    , mUI(nullptr)
 {
 
 }
@@ -63,7 +67,8 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     }
 
     mPhysics = new Physics();
-
+   
+    // Renderer
     mRenderer = new Renderer();
     if(!mRenderer->Initialize(mHwnd, width, height))
     {
@@ -71,6 +76,14 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         mRenderer = nullptr;
 
         DebugLog(L"Renderer not initialized!");
+        return false;
+    }
+
+    // UI
+    mUI = new UI();
+    if(!mUI->Initialize(mRenderer, width, height))
+    {
+        DebugLog(L"UI not initialized!");
         return false;
     }
 
@@ -138,6 +151,22 @@ void Game::Cleanup()
     {
         delete mPlayer;
         mPlayer = nullptr;
+    }
+
+    if(!mActors.empty())
+    {
+        for(auto& actor : mActors)
+        {
+            delete actor;
+            actor = nullptr;
+        }
+    }
+
+    if(mUI)
+    {
+        mUI->Cleanup();
+        delete mUI;
+        mUI = nullptr;
     }
 
     if(mRenderer)
@@ -263,7 +292,7 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         if(mPlayer->Shoot(mPhysics->GetDynamicsWorld()))
         {
-            DebugLog(L"HIT!");
+            ++mScore;
         }
         return 0;
     }
@@ -322,6 +351,14 @@ void Game::render()
     {
         mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
         mRenderer->Draw(mActors);
+
+        mUI->Begin();
+
+        wchar_t buff[64];
+        swprintf_s(buff, L"Score: %d", mScore);
+        mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
+        
+        mUI->End();
         mRenderer->EndFrame();
     }
 }

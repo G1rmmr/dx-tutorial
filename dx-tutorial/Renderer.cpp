@@ -70,8 +70,8 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         numElements,
         vsBlob->GetBufferPointer(),
         vsBlob->GetBufferSize(),
-        &mInputLayout
-    );
+        &mInputLayout);
+
     if(FAILED(hr))
     {
         MessageBox(nullptr, L"CreateInputLayout failed", L"Error", MB_OK);
@@ -94,7 +94,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     ID3D11RenderTargetView* rtv = mPipeline->GetRenderTargetView();
     context->OMSetRenderTargets(1, &rtv, mPipeline->GetDepthStencilView());
 
-    D3D11_VIEWPORT viewport;
+    D3D11_VIEWPORT viewport = {};
     viewport.Width = static_cast<FLOAT>(width);
     viewport.Height = static_cast<FLOAT>(height);
     viewport.MinDepth = 0.0f;

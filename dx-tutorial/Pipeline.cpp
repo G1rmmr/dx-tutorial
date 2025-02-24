@@ -106,7 +106,7 @@ bool Pipeline::createDeviceAndSwapChain(HWND hWnd, int width, int height)
     swapChainDesc.BufferCount = 1;
     swapChainDesc.BufferDesc.Width = width;
     swapChainDesc.BufferDesc.Height = height;
-    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -118,7 +118,7 @@ bool Pipeline::createDeviceAndSwapChain(HWND hWnd, int width, int height)
     UINT createDeviceFlags = 0;
 
 #if defined(_DEBUG)
-    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+    createDeviceFlags |= D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #endif
 
     D3D_FEATURE_LEVEL featureLevels[] =
