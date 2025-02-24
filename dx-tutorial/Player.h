@@ -22,9 +22,21 @@ namespace core
 
 		void SyncPhysics();
 
+		bool Shoot(btDiscreteDynamicsWorld* world);
+
 		inline btRigidBody* GetRigidBody() const
 		{
 			return mRigidBody;
+		}
+
+		inline DirectX::XMFLOAT3 GetPos() const
+		{
+			return mPos;
+		}
+
+		inline DirectX::XMFLOAT3 GetForward() const
+		{
+			return mForward;
 		}
 
 	private:

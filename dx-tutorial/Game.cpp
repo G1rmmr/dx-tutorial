@@ -9,6 +9,7 @@
 #include "Enemy.h"
 #include "Floor.h"
 
+using namespace DirectX;
 using namespace core;
 
 HINSTANCE mHInstance;
@@ -25,7 +26,7 @@ int mScreenHeight;
 
 bool mIsRunning;
 
-void DebugLog(const LPCTSTR& text)
+static void DebugLog(const LPCTSTR& text)
 {
     MessageBox(nullptr, text, TEXT("LOG"), MB_OK);
 }
@@ -255,6 +256,15 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         ClientToScreen(hwnd, &pt);
         SetCursorPos(pt.x, pt.y);
 
+        return 0;
+    }
+
+    case WM_LBUTTONDOWN:
+    {
+        if(mPlayer->Shoot(mPhysics->GetDynamicsWorld()))
+        {
+            DebugLog(L"HIT!");
+        }
         return 0;
     }
 
