@@ -190,3 +190,17 @@ void Player::jump(btVector3& dir, const float velocity)
 	dir = mRigidBody->getLinearVelocity();
 	dir.setY(velocity);
 }
+
+bool Player::Shoot(btDiscreteDynamicsWorld* world)
+{
+	btVector3 bulletStart{
+		mPos.x + 0.5f * mForward.x,
+		mPos.y + 0.5f * mForward.y,
+		mPos.z + 0.5f * mForward.z};
+
+	btVector3 bulletEnd{100.f * mForward.x, 100.f * mForward.y, 100.f * mForward.z};
+	btCollisionWorld::ClosestRayResultCallback rayCallback(bulletStart, bulletEnd);
+
+	world->rayTest(bulletStart, bulletEnd, rayCallback);
+	return rayCallback.hasHit();
+}
