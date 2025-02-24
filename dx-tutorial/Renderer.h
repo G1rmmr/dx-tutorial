@@ -9,6 +9,7 @@
 #include "Actor.h"
 #include "Pipeline.h"
 #include "Shader.h"
+#include "UI.h"
 
 namespace core
 {

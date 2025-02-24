@@ -34,11 +34,14 @@ namespace core
         class Renderer* mRenderer;
         class Player* mPlayer;
         class Physics* mPhysics;
+        class UI* mUI;
 
         std::vector<class Actor*> mActors;
 
         int mScreenWidth;
         int mScreenHeight;
+        
+        int mScore;
 
         bool mIsRunning;
     };
