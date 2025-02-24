@@ -180,6 +180,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Floor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Physics.cpp" />
@@ -189,7 +190,9 @@
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Floor.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Pipeline.h" />

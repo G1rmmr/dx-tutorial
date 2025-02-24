@@ -27,8 +27,6 @@ namespace core
         void render();
 
     private:
-        std::vector<class Actor*> mActors;
-
         HINSTANCE mHInstance;
         HWND mHwnd;
         ULONGLONG mTicksCount;
@@ -36,6 +34,8 @@ namespace core
         class Renderer* mRenderer;
         class Player* mPlayer;
         class Physics* mPhysics;
+
+        std::vector<class Actor*> mActors;
 
         int mScreenWidth;
         int mScreenHeight;

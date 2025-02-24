@@ -8,15 +8,17 @@ namespace core
     {
     public:
         Actor() = default;
-        virtual ~Actor() = default;
+        virtual ~Actor() {};
 
-        virtual void Update(float deltaTime) = 0;
+        virtual void Update(const float deltaTime) = 0;
 
         virtual void Render(
             ID3D11DeviceContext* context,
             ID3D11Buffer* matrixBuf,
             const DirectX::XMMATRIX& view,
             const DirectX::XMMATRIX& proj) = 0;
+
+        virtual void SyncPhysics() = 0;
 
         inline DirectX::XMFLOAT3 GetPos() const
         {

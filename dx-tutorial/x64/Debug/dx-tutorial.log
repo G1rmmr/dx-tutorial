@@ -1,7 +1,4 @@
-﻿  Game.cpp
-  Pipeline.cpp
-  Renderer.cpp
-  코드를 생성하고 있습니다...
+﻿  Floor.cpp
   dx-tutorial.vcxproj -> C:\Users\G1\source\repos\dx-tutorial\x64\Debug\dx-tutorial.exe
   'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
   배치 파일이 아닙니다.

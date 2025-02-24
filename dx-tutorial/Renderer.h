@@ -7,6 +7,8 @@
 #include <DirectXMath.h>
 
 #include "Actor.h"
+#include "Pipeline.h"
+#include "Shader.h"
 
 namespace core
 {
@@ -26,15 +28,24 @@ namespace core
 
         void SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj);
 
+        inline Pipeline* GetPipeline() const
+        {
+            return mPipeline;
+        }
+
+        inline Shader* GetShader() const
+        {
+            return mShader;
+        }
+
     private:
-        class Pipeline* mPipeline;
-        class Shader* mShader;
-
-        ID3D11Buffer* mMatrixBuffer;
-
         DirectX::XMMATRIX mView;
         DirectX::XMMATRIX mProj;
 
+        ID3D11Buffer* mMatrixBuffer;
         ID3D11InputLayout* mInputLayout;
+
+        Shader* mShader;
+        Pipeline* mPipeline;
     };
 }

@@ -7,6 +7,7 @@
 #include "Renderer.h"
 #include "Physics.h"
 #include "Enemy.h"
+#include "Floor.h"
 
 using namespace core;
 
@@ -24,13 +25,17 @@ int mScreenHeight;
 
 bool mIsRunning;
 
+void DebugLog(const LPCTSTR& text)
+{
+    MessageBox(nullptr, text, TEXT("LOG"), MB_OK);
+}
+
 Game::Game()
     : mHInstance(nullptr)
     , mHwnd(nullptr)
     , mTicksCount(0)
     , mRenderer(nullptr)
     , mPlayer(nullptr)
-    , mEnemy(nullptr)
     , mScreenWidth(0)
     , mScreenHeight(0)
     , mIsRunning(false)
@@ -46,54 +51,42 @@ Game::~Game()
 
 bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
 {
+    // window init
     mHInstance = hInstance;
     mScreenWidth = width;
     mScreenHeight = height;
-
-    mPhysics = new Physics();
-
-    btTransform startTransform;
-    startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(0.0f, -1.0f, 0.0f));
-
-    btCollisionShape* shape = new btBoxShape(btVector3(20.f, 1.0f, 20.f));
-
-    btScalar mass = 0.f;
-    bool isDynamic = (mass != 0.0f);
-
-    btVector3 localInertia(0, 0, 0);
-    if(isDynamic)
-    {
-        shape->calculateLocalInertia(mass, localInertia);
-    }
-
-    btDefaultMotionState*  motionState = new btDefaultMotionState(startTransform);
-
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
-    btRigidBody* floor = new btRigidBody(rbInfo);
-
-    mPhysics->AddRigidBody(floor);
-
-    mPlayer = new Player();
-    mPhysics->AddRigidBody(mPlayer->GetRigidBody());
 
     if(!createWindow(hInstance, width, height, nCmdShow))
     {
         return false;
     }
 
+    mPhysics = new Physics();
+
     mRenderer = new Renderer();
     if(!mRenderer->Initialize(mHwnd, width, height))
     {
         delete mRenderer;
         mRenderer = nullptr;
+
+        DebugLog(L"Renderer not initialized!");
         return false;
     }
 
-    auto enemy = new Enemy();
+    // Actors
+    auto enemy = new Enemy(mRenderer->GetPipeline()->GetDevice());
     mActors.emplace_back(enemy);
     mPhysics->AddRigidBody(enemy->GetRigidBody());
 
+    auto floor = new Floor(mRenderer->GetPipeline()->GetDevice());
+    mActors.emplace_back(floor);
+    mPhysics->AddRigidBody(floor->GetRigidBody());
+
+    // player
+    mPlayer = new Player();
+    mPhysics->AddRigidBody(mPlayer->GetRigidBody());
+
+    // set
     mTicksCount = GetTickCount64();
     mIsRunning = true;
 
@@ -256,7 +249,7 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
 
-        POINT pt;
+        POINT pt = {0, 0};
         pt.x = centerX;
         pt.y = centerY;
         ClientToScreen(hwnd, &pt);
@@ -293,8 +286,13 @@ void Game::processInput(float deltaTime)
 void Game::update(const float deltaTime)
 {
     mPhysics->Update(deltaTime);
+
+    for(auto& actor : mActors)
+    {
+        actor->SyncPhysics();
+    }
+
     mPlayer->SyncPhysics();
-    mEnemy->SyncPhysics();
 
     DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
 
@@ -313,7 +311,7 @@ void Game::render()
     if(mRenderer)
     {
         mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
-        mRenderer->Draw(mEnemy);
+        mRenderer->Draw(mActors);
         mRenderer->EndFrame();
     }
 }

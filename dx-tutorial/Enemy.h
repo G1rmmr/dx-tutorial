@@ -13,15 +13,17 @@ namespace core
 		Enemy();
 		Enemy(ID3D11Device* device);
 
-		virtual void Update(float deltaTime) override;
+		~Enemy() override;
 
-		virtual void Render(
+		void Update(const float deltaTime) override;
+
+		void Render(
 			ID3D11DeviceContext* context,
 			ID3D11Buffer* matrixBuf,
 			const DirectX::XMMATRIX& view,
 			const DirectX::XMMATRIX& proj) override;
 
-		void SyncPhysics();
+		void SyncPhysics() override;
 
 		inline btRigidBody* GetRigidBody() const
 		{

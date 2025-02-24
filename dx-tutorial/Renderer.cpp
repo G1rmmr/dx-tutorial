@@ -40,6 +40,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     mPipeline = new Pipeline();
     if(!mPipeline->Initialize(hWnd, width, height))
     {
+        MessageBox(nullptr, L"Pipeline init failed", L"Error", MB_OK);
         return false;
     }
 
@@ -59,6 +60,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,   0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
+
     UINT numElements = _countof(layoutDesc);
 
     ID3DBlob* vsBlob = mShader->GetVSBlob();
@@ -95,10 +97,10 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     D3D11_VIEWPORT viewport;
     viewport.Width = static_cast<FLOAT>(width);
     viewport.Height = static_cast<FLOAT>(height);
-    viewport.MinDepth = 0.f;
-    viewport.MaxDepth = 1.f;
-    viewport.TopLeftX = 0.f;
-    viewport.TopLeftY = 0.f;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    viewport.TopLeftX = 0.0f;
+    viewport.TopLeftY = 0.0f;
 
     context->RSSetViewports(1, &viewport);
     return true;

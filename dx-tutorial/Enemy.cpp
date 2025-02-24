@@ -91,6 +91,11 @@ Enemy::Enemy()
 
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, mMotionState, mCollisionShape, localInertia);
 	mRigidBody = new btRigidBody(rbInfo);
+
+    mRigidBody->activate(true);
+    mRigidBody->forceActivationState(DISABLE_DEACTIVATION);
+    mRigidBody->setFriction(0.3f);
+    mRigidBody->setDamping(0.f, 0.f);
 }
 
 Enemy::Enemy(ID3D11Device* device)
@@ -109,7 +114,7 @@ Enemy::Enemy(ID3D11Device* device)
     HRESULT hr = device->CreateBuffer(&bd, &initData, &mVertexBuf);
     if(FAILED(hr))
     {
-        // 에러 처리...
+        MessageBox(nullptr, TEXT("Enemy init failed!"), TEXT("ERROR"), MB_OK);
     }
 }
 
@@ -152,4 +157,40 @@ void Enemy::SyncPhysics()
 		mPos.y = origin.getY();
 		mPos.z = origin.getZ();
 	}
+}
+
+void Enemy::Update(const float deltaTime)
+{
+
+}
+
+void Enemy::Render(
+    ID3D11DeviceContext* context,
+    ID3D11Buffer* matrixBuf,
+    const DirectX::XMMATRIX& view,
+    const DirectX::XMMATRIX& proj)
+{
+    XMMATRIX world = XMMatrixIdentity();
+
+    struct MatrixBuffer
+    {
+        XMMATRIX World;
+        XMMATRIX View;
+        XMMATRIX Proj;
+    };
+
+    MatrixBuffer bufData = {};
+    bufData.World = XMMatrixTranspose(world);
+    bufData.View = XMMatrixTranspose(view);
+    bufData.Proj = XMMatrixTranspose(proj);
+
+    context->UpdateSubresource(matrixBuf, 0, nullptr, &bufData, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &matrixBuf);
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+
+    context->IASetVertexBuffers(0, 1, &mVertexBuf, &stride, &offset);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->Draw(36, 0);
 }

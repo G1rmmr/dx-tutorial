@@ -65,7 +65,6 @@ bool Shader::Initialize(
         return false;
     }
 
-
     mVSBlob = vsBlob;
     psBlob->Release();
 

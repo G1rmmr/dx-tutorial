@@ -25,26 +25,31 @@ bool Pipeline::Initialize(HWND hWnd, int width, int height)
 {
     if(!createDeviceAndSwapChain(hWnd, width, height))
     {
+        MessageBox(nullptr, L"Device init failed", L"Error", MB_OK);
         return false;
     }
         
     if(!createRenderTargetView())
     {
+        MessageBox(nullptr, L"RTV init failed", L"Error", MB_OK);
         return false;
     }
         
     if(!createDepthStencilBuffer(width, height))
     {
+        MessageBox(nullptr, L"Depth stencil buf init failed", L"Error", MB_OK);
         return false;
     }
         
     if(!createDepthStencilState())
     {
+        MessageBox(nullptr, L"Depth stencil state init failed", L"Error", MB_OK);
         return false;
     }
         
     if(!createRasterizerState())
     {
+        MessageBox(nullptr, L"rasterizer state init failed", L"Error", MB_OK);
         return false;
     }
         
@@ -112,10 +117,21 @@ bool Pipeline::createDeviceAndSwapChain(HWND hWnd, int width, int height)
 
     UINT createDeviceFlags = 0;
 
+#if defined(_DEBUG)
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
     D3D_FEATURE_LEVEL featureLevels[] =
     {
-        D3D_FEATURE_LEVEL_11_0
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_1
     };
+
     D3D_FEATURE_LEVEL featureLevel;
 
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
@@ -135,6 +151,7 @@ bool Pipeline::createDeviceAndSwapChain(HWND hWnd, int width, int height)
 
     if(FAILED(hr))
     {
+        MessageBox(nullptr, L"hr", L"Error", MB_OK);
         return false;
     }
 
