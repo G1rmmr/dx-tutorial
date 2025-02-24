@@ -1,31 +1,37 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "Actor.h"
 
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
 
 namespace core
 {
-	class Enemy
+	class Enemy : public Actor
 	{
 	public:
 		Enemy();
+		Enemy(ID3D11Device* device);
 
-		void SyncPhysics();
+		~Enemy() override;
+
+		void Update(const float deltaTime) override;
+
+		void Render(
+			ID3D11DeviceContext* context,
+			ID3D11Buffer* matrixBuf,
+			const DirectX::XMMATRIX& view,
+			const DirectX::XMMATRIX& proj) override;
+
+		void SyncPhysics() override;
 
 		inline btRigidBody* GetRigidBody() const
 		{
 			return mRigidBody;
 		}
 
-		inline DirectX::XMFLOAT3 GetPos() const
-		{
-			return mPos;
-		}
-
 	private:
-		DirectX::XMFLOAT3 mPos;
+		ID3D11Buffer* mVertexBuf;
 
 		btRigidBody* mRigidBody;
 		btCollisionShape* mCollisionShape;

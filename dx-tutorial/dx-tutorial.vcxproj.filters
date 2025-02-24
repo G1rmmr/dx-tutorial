@@ -12,6 +12,8 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Pipeline.cpp" />
+    <ClCompile Include="Floor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -20,6 +22,9 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Pipeline.h" />
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="Floor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="arch.md" />
