@@ -4,6 +4,8 @@
 #include "Enemy.h"
 #include "Pipeline.h"
 
+#include <d3dcompiler.h>
+
 using namespace core;
 
 struct Vertex
@@ -26,6 +28,9 @@ Renderer::Renderer()
     , mShader(nullptr)
     , mView(DirectX::XMMatrixIdentity())
     , mProj(DirectX::XMMatrixIdentity())
+    , mSkyBoxVS(nullptr)
+    , mSkyBoxPS(nullptr)
+    , mSkyBoxIL(nullptr)
 {
 
 }
@@ -103,6 +108,12 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     viewport.TopLeftY = 0.0f;
 
     context->RSSetViewports(1, &viewport);
+
+    if(!InitSkyBox())
+    {
+        MessageBox(nullptr, L"SkyBox rendering init failed", L"Error", MB_OK);
+        return false;
+    }
     return true;
 }
 
@@ -170,4 +181,77 @@ void Renderer::SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::X
 {
     mView = view;
     mProj = proj;
+}
+
+bool Renderer::InitSkyBox()
+{
+    ID3DBlob* vsBlob = nullptr;
+    ID3DBlob* psBlob = nullptr;
+
+    HRESULT hr = D3DCompileFromFile(
+        L"SkyBoxVertex.hlsl", nullptr, nullptr, 
+        "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
+
+    if(FAILED(hr))
+    {
+        return false;
+    }
+
+    hr = D3DCompileFromFile(
+        L"SkyBoxPixel.hlsl", nullptr, nullptr, 
+        "main", "ps_5_0", 0, 0, &psBlob, nullptr);
+
+    if(FAILED(hr))
+    {
+        vsBlob->Release();
+        return false;
+    }
+
+    auto device = mPipeline->GetDevice();
+
+    device->CreateVertexShader(
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(), 
+        nullptr,
+        &mSkyBoxVS);
+
+    device->CreatePixelShader(
+        psBlob->GetBufferPointer(),
+        psBlob->GetBufferSize(), 
+        nullptr,
+        &mSkyBoxPS);
+
+    D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    device->CreateInputLayout(
+        layoutDesc,
+        ARRAYSIZE(layoutDesc),
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(),
+        &mSkyBoxIL);
+
+    vsBlob->Release();
+    psBlob->Release();
+
+    return true;
+    return true;
+}
+
+void Renderer::SetSkyBoxPipeline()
+{
+    auto context = mPipeline->GetDeviceContext();
+    context->IASetInputLayout(mSkyBoxIL);
+    context->VSSetShader(mSkyBoxVS, nullptr, 0);
+    context->PSSetShader(mSkyBoxPS, nullptr, 0);
+}
+
+void Renderer::BindSkyBoxTex(
+    ID3D11ShaderResourceView* skyboxSRV,
+    ID3D11SamplerState* sampler)
+{
+    auto context = mPipeline->GetDeviceContext();
+    context->PSSetShaderResources(0, 1, &skyboxSRV);
+    context->PSSetSamplers(0, 1, &sampler);
 }

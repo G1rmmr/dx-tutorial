@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/bullet3-x64-windows-3.25#3-a7eb056d-1af7-465c-817a-b63a1baf6636",
-  "name": "bullet3:x64-windows@3.25#3 44eac0c4c6d13994bcc0958c78d044e066e05c602039f6459ff4036b2f4c65de",
+  "documentNamespace": "https://spdx.org/spdxdocs/bullet3-x64-windows-3.25#3-33c5c8e6-5818-4601-a5c6-274088e33a7e",
+  "name": "bullet3:x64-windows@3.25#3 d493feabdf12f7aab2c7edd76fdca5ba11c23ee75d18bfdff718ce4d04203187",
   "creationInfo": {
     "creators": [
       "Tool: vcpkg-2025-01-29-a75ad067f470c19f030361064e32a2585392bee2"
     ],
-    "created": "2025-02-10T09:31:36Z"
+    "created": "2025-02-25T08:41:22Z"
   },
   "relationships": [
     {
@@ -98,7 +98,7 @@
       "name": "bullet3",
       "SPDXID": "SPDXRef-port",
       "versionInfo": "3.25#3",
-      "downloadLocation": "git+https://github.com/Microsoft/vcpkg#ports/bullet3",
+      "downloadLocation": "git+https://github.com/Microsoft/vcpkg@8924ba3500ee3fb1124f3b827b86e0d456b90dd7",
       "homepage": "https://github.com/bulletphysics/bullet3",
       "licenseConcluded": "Zlib",
       "licenseDeclared": "NOASSERTION",
@@ -109,7 +109,7 @@
     {
       "name": "bullet3:x64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "44eac0c4c6d13994bcc0958c78d044e066e05c602039f6459ff4036b2f4c65de",
+      "versionInfo": "d493feabdf12f7aab2c7edd76fdca5ba11c23ee75d18bfdff718ce4d04203187",
       "downloadLocation": "NONE",
       "licenseConcluded": "Zlib",
       "licenseDeclared": "NOASSERTION",
@@ -133,7 +133,7 @@
   ],
   "files": [
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/cmake-config-export.diff",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/cmake-config-export.diff",
       "SPDXID": "SPDXRef-file-0",
       "checksums": [
         {
@@ -145,7 +145,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/cmake-version.diff",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/cmake-version.diff",
       "SPDXID": "SPDXRef-file-1",
       "checksums": [
         {
@@ -157,7 +157,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/opencl.diff",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/opencl.diff",
       "SPDXID": "SPDXRef-file-2",
       "checksums": [
         {
@@ -169,7 +169,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/portfile.cmake",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/portfile.cmake",
       "SPDXID": "SPDXRef-file-3",
       "checksums": [
         {
@@ -181,7 +181,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/tinyxml2.diff",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/tinyxml2.diff",
       "SPDXID": "SPDXRef-file-4",
       "checksums": [
         {
@@ -193,7 +193,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/usage",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/usage",
       "SPDXID": "SPDXRef-file-5",
       "checksums": [
         {
@@ -205,7 +205,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/G1/vcpkg/ports/bullet3/vcpkg.json",
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/bullet3/8924ba3500ee3fb1124f3b827b86e0d456b90dd7/vcpkg.json",
       "SPDXID": "SPDXRef-file-6",
       "checksums": [
         {

@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/bullet3-x64-windows-static-3.25#3-04aa49fb-7881-4e90-a456-df334ff790b9",
-  "name": "bullet3:x64-windows-static@3.25#3 e478ff8e6b56101c3dde3bc2dcae14056c0e5698e9bf159c8b44acb37a561c1d",
+  "documentNamespace": "https://spdx.org/spdxdocs/bullet3-x64-windows-static-3.25#3-a0f0b259-2f1f-482e-b719-077fb5dd2e76",
+  "name": "bullet3:x64-windows-static@3.25#3 f695bbe2eb1ffdd0457b8862cfe2280f931e3ea4943297780fd969a0f93bea33",
   "creationInfo": {
     "creators": [
       "Tool: vcpkg-2025-01-29-a75ad067f470c19f030361064e32a2585392bee2"
     ],
-    "created": "2025-02-10T09:52:39Z"
+    "created": "2025-02-25T07:42:16Z"
   },
   "relationships": [
     {
@@ -109,7 +109,7 @@
     {
       "name": "bullet3:x64-windows-static",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "e478ff8e6b56101c3dde3bc2dcae14056c0e5698e9bf159c8b44acb37a561c1d",
+      "versionInfo": "f695bbe2eb1ffdd0457b8862cfe2280f931e3ea4943297780fd969a0f93bea33",
       "downloadLocation": "NONE",
       "licenseConcluded": "Zlib",
       "licenseDeclared": "NOASSERTION",

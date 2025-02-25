@@ -9,6 +9,7 @@
 #include "Enemy.h"
 #include "Floor.h"
 #include "UI.h"
+#include "SkyBox.h"
 
 using namespace DirectX;
 using namespace core;
@@ -22,6 +23,7 @@ Player* mPlayer;
 Enemy* mEnemy;
 Physics* mPhysics;
 UI* mUI;
+SkyBox* mSkyBox;
 
 int mScreenWidth;
 int mScreenHeight;
@@ -45,6 +47,7 @@ Game::Game()
     , mPhysics(nullptr)
     , mScore(0)
     , mUI(nullptr)
+    , mSkyBox(nullptr)
 {
 
 }
@@ -78,6 +81,11 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         DebugLog(L"Renderer not initialized!");
         return false;
     }
+
+    // Sky box
+    mSkyBox = new SkyBox(
+        mRenderer->GetPipeline()->GetDevice(),
+        mRenderer->GetPipeline()->GetDeviceContext());
 
     // UI
     mUI = new UI();
@@ -131,11 +139,7 @@ void Game::Run()
 
         ULONGLONG currentTime = GetTickCount64();
         float deltaTime = (currentTime - mTicksCount) / 1000.f;
-        
-        if(deltaTime > 0.05f)
-        {
-            deltaTime = 0.05f;
-        }
+        deltaTime = deltaTime > 0.05f ? 0.05f : deltaTime;
             
         mTicksCount = currentTime;
 
@@ -147,6 +151,12 @@ void Game::Run()
 
 void Game::Cleanup()
 {
+    if(mSkyBox)
+    {
+        delete mSkyBox;
+        mSkyBox = nullptr;
+    }
+
     if(mPlayer)
     {
         delete mPlayer;
@@ -350,6 +360,29 @@ void Game::render()
     if(mRenderer)
     {
         mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
+
+        if(mSkyBox)
+        {
+            XMMATRIX view = mPlayer->GetViewMatrix();
+
+            constexpr float fovAngleY = XMConvertToRadians(60.f);
+            const float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
+            const float nearZ = 0.1f;
+            const float farZ = 100.0f;
+
+            XMMATRIX proj = XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
+
+            mRenderer->SetSkyBoxPipeline();
+
+            mRenderer->BindSkyBoxTex(
+                mSkyBox->GetCubeMapSRV(),
+                mSkyBox->GetSamplerState());
+
+            mSkyBox->Render(
+                mRenderer->GetPipeline()->GetDeviceContext(),
+                mRenderer->GetMatrixBuffer(), view, proj);
+        }
+
         mRenderer->Draw(mActors);
 
         mUI->Begin();

@@ -20,6 +20,7 @@ namespace core
         ~Renderer();
 
         bool Initialize(HWND hWnd, int width, int height);
+
         void Cleanup();
 
         void BeginFrame(float red, float green, float blue, float alpha);
@@ -27,7 +28,16 @@ namespace core
 
         void Draw(std::vector<Actor*>& actors);
 
-        void SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj);
+        void SetCameraMatrices(
+            const DirectX::XMMATRIX& view,
+            const DirectX::XMMATRIX& proj);
+
+        bool InitSkyBox();
+        void SetSkyBoxPipeline();
+
+        void BindSkyBoxTex(
+            ID3D11ShaderResourceView* skyboxSRV,
+            ID3D11SamplerState* sampler);
 
         inline Pipeline* GetPipeline() const
         {
@@ -39,6 +49,11 @@ namespace core
             return mShader;
         }
 
+        inline ID3D11Buffer* GetMatrixBuffer() const
+        {
+            return mMatrixBuffer;
+        }
+
     private:
         DirectX::XMMATRIX mView;
         DirectX::XMMATRIX mProj;
@@ -47,6 +62,11 @@ namespace core
         ID3D11InputLayout* mInputLayout;
 
         Shader* mShader;
+
+        ID3D11VertexShader* mSkyBoxVS;
+        ID3D11PixelShader* mSkyBoxPS;
+        ID3D11InputLayout* mSkyBoxIL;
+
         Pipeline* mPipeline;
     };
 }

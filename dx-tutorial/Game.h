@@ -35,6 +35,7 @@ namespace core
         class Player* mPlayer;
         class Physics* mPhysics;
         class UI* mUI;
+        class SkyBox* mSkyBox;
 
         std::vector<class Actor*> mActors;
 

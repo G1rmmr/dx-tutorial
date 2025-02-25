@@ -3,6 +3,8 @@
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl" />
     <FxCompile Include="VertexShader.hlsl" />
+    <FxCompile Include="SkyBoxVertex.hlsl" />
+    <FxCompile Include="SkyBoxPixel.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -14,6 +16,8 @@
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="Floor.cpp" />
+    <ClCompile Include="UI.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -25,9 +29,14 @@
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="Actor.h" />
     <ClInclude Include="Floor.h" />
+    <ClInclude Include="UI.h" />
+    <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="arch.md" />
     <None Include="..\vcpkg.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="skybox.dds" />
   </ItemGroup>
 </Project>

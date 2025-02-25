@@ -13,7 +13,7 @@ Pipeline::Pipeline()
     , mDepthStencilState(nullptr)
     , mRasterizerState(nullptr)
 {
-
+    
 }
 
 Pipeline::~Pipeline()

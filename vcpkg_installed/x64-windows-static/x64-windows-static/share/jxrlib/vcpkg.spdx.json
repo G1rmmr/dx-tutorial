@@ -1,0 +1,242 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/jxrlib-x64-windows-static-2019.10.9#7-70ac0345-182f-4baf-9e83-7040a12347bf",
+  "name": "jxrlib:x64-windows-static@2019.10.9#7 86c86808c7992a5c73fc8a27279838728562e75d72515e92d855e9465fb9d015",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-2025-01-29-a75ad067f470c19f030361064e32a2585392bee2"
+    ],
+    "created": "2025-02-25T09:09:34Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-2"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-3"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-4"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-5"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-6"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-7"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-3",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-4",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-5",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-6",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-7",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "jxrlib",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "2019.10.9#7",
+      "downloadLocation": "git+https://github.com/Microsoft/vcpkg@4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1",
+      "homepage": "https://github.com/4creators/jxrlib",
+      "licenseConcluded": "BSD-2-Clause",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "Open source implementation of the jpegxr image format standard.",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "jxrlib:x64-windows-static",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "86c86808c7992a5c73fc8a27279838728562e75d72515e92d855e9465fb9d015",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "BSD-2-Clause",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-0",
+      "name": "4creators/jxrlib",
+      "downloadLocation": "git+https://github.com/4creators/jxrlib@f7521879862b9085318e814c6157490dd9dbbdb4",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f5617cbe73b6b905cc6bba181e6a3efedd59584f7a8c90e0f34db580cfdad4239a2ab753df4e221f26a5c0db51475b021052e3b9e3ab3673573573b1d57f3fdb"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/CMakeLists.txt",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "04f4becd346f1842fbe1a40de4d3c7c953fd562057653edf0082f773f42c3148"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/FindJXR.cmake",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e7177d385e5eec36586484d16f48e59273b64cdfdaa319434bf929c16e0af6d6"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/fix-mingw.patch",
+      "SPDXID": "SPDXRef-file-2",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ad6908bd2cc1548a1ff392dde63940a7093af3342cd433f501bcb996588c1135"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/guiddef.patch",
+      "SPDXID": "SPDXRef-file-3",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "07f5851c580987c163cc89d6cb1bd9851ed64b4ab14f8745dcac68c7317a653c"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/portfile.cmake",
+      "SPDXID": "SPDXRef-file-4",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "774bc077bf69c98f9c982958f87901429ae1edc103c7610563e90dbff548d9ea"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/usage",
+      "SPDXID": "SPDXRef-file-5",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1c29f3994092a0aa1eda3e387d6658d05b74b4ca1c0bf0982ddf588dc5fedb5a"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/vcpkg-cmake-wrapper.cmake",
+      "SPDXID": "SPDXRef-file-6",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "14da73b5647e8ba7de9846953bb514330d7968a232ebd234c3af2361e48e2b7d"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/G1/vcpkg/buildtrees/versioning_/versions/jxrlib/4d6cb4015844afea80f96aa9cd6c43fb2bdd1cc1/vcpkg.json",
+      "SPDXID": "SPDXRef-file-7",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f66ef6a8fbc769b9a638d8bbe2809c6398ca88c122e1fc02660aca6bd3c91977"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}
