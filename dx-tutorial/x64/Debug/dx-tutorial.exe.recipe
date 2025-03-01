@@ -10,6 +10,12 @@
       <FullPath>C:\Users\G1\source\repos\dx-tutorial\x64\Debug\PixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
+      <FullPath>C:\Users\G1\source\repos\dx-tutorial\x64\Debug\SkyBoxPS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\G1\source\repos\dx-tutorial\x64\Debug\SkyBoxVS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\G1\source\repos\dx-tutorial\x64\Debug\VertexShader.cso</FullPath>
     </ContentFile>
   </ContentFiles>

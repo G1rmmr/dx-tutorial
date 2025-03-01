@@ -1,8 +1,10 @@
 #include "Renderer.h"
-
 #include "Shader.h"
 #include "Enemy.h"
 #include "Pipeline.h"
+#include "SkyBox.h"
+
+#include <d3dcompiler.h>
 
 using namespace core;
 
@@ -26,8 +28,8 @@ Renderer::Renderer()
     , mShader(nullptr)
     , mView(DirectX::XMMatrixIdentity())
     , mProj(DirectX::XMMatrixIdentity())
+    , mSkyBox(nullptr)
 {
-
 }
 
 Renderer::~Renderer()
@@ -47,9 +49,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     ID3D11Device* device = mPipeline->GetDevice();
 
     mShader = new Shader();
-    if(!mShader->Initialize(device,
-        L"VertexShader.hlsl", "VSMain",
-        L"PixelShader.hlsl", "PSMain"))
+    if(!mShader->Initialize(device, L"VertexShader.hlsl", "VSMain", L"PixelShader.hlsl", "PSMain"))
     {
         MessageBox(nullptr, L"Shader init failed", L"Error", MB_OK);
         return false;
@@ -62,11 +62,10 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     };
 
     UINT numElements = _countof(layoutDesc);
-
     ID3DBlob* vsBlob = mShader->GetVSBlob();
 
     HRESULT hr = device->CreateInputLayout(
-        layoutDesc,
+        layoutDesc, 
         numElements,
         vsBlob->GetBufferPointer(),
         vsBlob->GetBufferSize(),
@@ -82,7 +81,6 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     cbd.Usage = D3D11_USAGE_DEFAULT;
     cbd.ByteWidth = sizeof(MatrixBuffer);
     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cbd.CPUAccessFlags = 0;
 
     hr = device->CreateBuffer(&cbd, nullptr, &mMatrixBuffer);
     if(FAILED(hr))
@@ -103,6 +101,13 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     viewport.TopLeftY = 0.0f;
 
     context->RSSetViewports(1, &viewport);
+
+    if(!InitSkyBox())
+    {
+        MessageBox(nullptr, L"SkyBox rendering init failed", L"Error", MB_OK);
+        return false;
+    }
+
     return true;
 }
 
@@ -125,6 +130,12 @@ void Renderer::Cleanup()
     {
         mMatrixBuffer->Release();
         mMatrixBuffer = nullptr;
+    }
+
+    if(mSkyBox)
+    {
+        delete mSkyBox;
+        mSkyBox = nullptr;
     }
 
     if(mPipeline)
@@ -157,6 +168,9 @@ void Renderer::Draw(std::vector<Actor*>& actors)
 {
     ID3D11DeviceContext* context = mPipeline->GetDeviceContext();
 
+    mSkyBox->Render(context, mMatrixBuffer, mView, mProj);
+
+    // 일반 오브젝트 렌더링
     mShader->SetShader(context);
     context->IASetInputLayout(mInputLayout);
 
@@ -170,4 +184,13 @@ void Renderer::SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::X
 {
     mView = view;
     mProj = proj;
+}
+
+bool Renderer::InitSkyBox()
+{
+    auto device = mPipeline->GetDevice();
+    auto context = mPipeline->GetDeviceContext();
+
+    mSkyBox = new SkyBox(device, context);
+    return mSkyBox != nullptr;
 }

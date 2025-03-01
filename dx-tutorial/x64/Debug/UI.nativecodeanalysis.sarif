@@ -1,0 +1,83 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "runs": [
+    {
+      "results": [],
+      "tool": {
+        "driver": {
+          "name": "PREfast",
+          "fullName": "PREfast Code Analysis",
+          "version": "14.43.34808.0",
+          "informationUri": "https://aka.ms/cpp/ca"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/ui.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "sha-256": "86c4298b769a21d2548bcad9307f6218afb0fd7fcf89c620733187e603ea895c"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/ui.h"
+          },
+          "hashes": {
+            "sha-256": "6a98e7f1e7966f853563b239d5d6d8a665c6b50a33eb98188ad58b4711dd9027"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/renderer.h"
+          },
+          "hashes": {
+            "sha-256": "48bf70c1bf7f37e148fce5e42905596fc1136c01998ec34781c066f86ea26ba8"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/actor.h"
+          },
+          "hashes": {
+            "sha-256": "95106617f52120a5b268d86ab45de9d2d08f81c681872c6f66dc8b5d729d6394"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/pipeline.h"
+          },
+          "hashes": {
+            "sha-256": "22db906a9b8c5ff67fd34d4ccecd03208de04340aef7c4b9d14b503b923ab621"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/shader.h"
+          },
+          "hashes": {
+            "sha-256": "a6e696f165f394c0a364559abea88fd0b0ddc937d2ba8d12f4f1d1b1cc01cb90"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/g1/source/repos/dx-tutorial/dx-tutorial/skybox.h"
+          },
+          "hashes": {
+            "sha-256": "056944d2a8bef5afa97d6a28f1666d5ed5aeb65b262ec3a4691e1117c2df52de"
+          }
+        }
+      ]
+    }
+  ]
+}

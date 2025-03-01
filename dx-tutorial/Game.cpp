@@ -9,6 +9,7 @@
 #include "Enemy.h"
 #include "Floor.h"
 #include "UI.h"
+#include "SkyBox.h"
 
 using namespace DirectX;
 using namespace core;
@@ -22,6 +23,7 @@ Player* mPlayer;
 Enemy* mEnemy;
 Physics* mPhysics;
 UI* mUI;
+SkyBox* mSkyBox;
 
 int mScreenWidth;
 int mScreenHeight;
@@ -45,6 +47,7 @@ Game::Game()
     , mPhysics(nullptr)
     , mScore(0)
     , mUI(nullptr)
+    , mSkyBox(nullptr)
 {
 
 }
@@ -79,6 +82,11 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
         return false;
     }
 
+    // Sky box
+    mSkyBox = new SkyBox(
+        mRenderer->GetPipeline()->GetDevice(),
+        mRenderer->GetPipeline()->GetDeviceContext());
+
     // UI
     mUI = new UI();
     if(!mUI->Initialize(mRenderer, width, height))
@@ -92,8 +100,9 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mActors.emplace_back(enemy);
     mPhysics->AddRigidBody(enemy->GetRigidBody());
 
-    auto floor = new Floor(mRenderer->GetPipeline()->GetDevice());
-    mActors.emplace_back(floor);
+
+    auto floor = new Floor();
+    // mActors.emplace_back(floor);
     mPhysics->AddRigidBody(floor->GetRigidBody());
 
     // player
@@ -131,11 +140,7 @@ void Game::Run()
 
         ULONGLONG currentTime = GetTickCount64();
         float deltaTime = (currentTime - mTicksCount) / 1000.f;
-        
-        if(deltaTime > 0.05f)
-        {
-            deltaTime = 0.05f;
-        }
+        deltaTime = deltaTime > 0.05f ? 0.05f : deltaTime;
             
         mTicksCount = currentTime;
 
@@ -147,6 +152,12 @@ void Game::Run()
 
 void Game::Cleanup()
 {
+    if(mSkyBox)
+    {
+        delete mSkyBox;
+        mSkyBox = nullptr;
+    }
+
     if(mPlayer)
     {
         delete mPlayer;
@@ -347,18 +358,35 @@ void Game::update(const float deltaTime)
 
 void Game::render()
 {
-    if(mRenderer)
+    if(!mRenderer)
     {
-        mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
-        mRenderer->Draw(mActors);
-
-        mUI->Begin();
-
-        wchar_t buff[64];
-        swprintf_s(buff, L"Score: %d", mScore);
-        mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
-        
-        mUI->End();
-        mRenderer->EndFrame();
+        return;
     }
+
+    mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
+
+    if(mSkyBox)
+    {
+        XMMATRIX view = mPlayer->GetViewMatrix();
+
+        float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
+        XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect, 0.1f, 100.f);
+
+        mSkyBox->Render(
+            mRenderer->GetPipeline()->GetDeviceContext(),
+            mRenderer->GetMatrixBuffer(),
+            view,
+            proj);
+    }
+
+    mRenderer->Draw(mActors);
+
+    mUI->Begin();
+
+    wchar_t buff[64];
+    swprintf_s(buff, L"Score: %d", mScore);
+    mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
+
+    mUI->End();
+    mRenderer->EndFrame();
 }
