@@ -38,5 +38,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="skybox.dds" />
+    <Image Include="Clear\vz_clear_cubemap_ue.dds" />
   </ItemGroup>
 </Project>

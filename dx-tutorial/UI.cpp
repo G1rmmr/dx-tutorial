@@ -1,4 +1,4 @@
-#include "UI.h"
+﻿#include "UI.h"
 #include "Renderer.h"
 #include "Pipeline.h"
 
@@ -112,7 +112,7 @@ bool UI::createRenderTarget()
     }
         
     IDXGISurface* dxgiSurface = nullptr;
-    hr = backBuffer->QueryInterface(IID_PPV_ARGS(&dxgiSurface));
+    hr = backBuffer->QueryInterface(__uuidof(IDXGISurface), (void**)&dxgiSurface);
     
     backBuffer->Release();
     backBuffer = nullptr;
@@ -127,11 +127,12 @@ bool UI::createRenderTarget()
         }
         return false;
     }
-
     D2D1_RENDER_TARGET_PROPERTIES rtProps =
         D2D1::RenderTargetProperties(
             D2D1_RENDER_TARGET_TYPE_DEFAULT,
-            D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
+            D2D1::PixelFormat(
+            DXGI_FORMAT_B8G8R8A8_UNORM,
+            D2D1_ALPHA_MODE_PREMULTIPLIED),
             0.0f,
             0.0f);
 
@@ -140,14 +141,17 @@ bool UI::createRenderTarget()
         &rtProps,
         &mRenderTarget);
 
-    dxgiSurface->Release();
-    dxgiSurface = nullptr;
-
     if(FAILED(hr))
     {
-        MessageBox(nullptr, TEXT("Render target not initialized!"), TEXT("LOG"), MB_OK);
+        dxgiSurface->Release();
+        dxgiSurface = nullptr;
+
+        MessageBox(nullptr, TEXT("DXGI Render target not initialized!"), TEXT("LOG"), MB_OK);
         return false;
     }
+
+    dxgiSurface->Release();
+    dxgiSurface = nullptr;
     return true;
 }
 

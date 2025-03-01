@@ -247,6 +247,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Clear\vz_clear_cubemap_ue.dds" />
     <Image Include="skybox.dds" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

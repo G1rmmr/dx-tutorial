@@ -1,8 +1,8 @@
 #include "Renderer.h"
-
 #include "Shader.h"
 #include "Enemy.h"
 #include "Pipeline.h"
+#include "SkyBox.h"
 
 #include <d3dcompiler.h>
 
@@ -31,8 +31,8 @@ Renderer::Renderer()
     , mSkyBoxVS(nullptr)
     , mSkyBoxPS(nullptr)
     , mSkyBoxIL(nullptr)
+    , mSkyBox(nullptr)
 {
-
 }
 
 Renderer::~Renderer()
@@ -52,9 +52,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     ID3D11Device* device = mPipeline->GetDevice();
 
     mShader = new Shader();
-    if(!mShader->Initialize(device,
-        L"VertexShader.hlsl", "VSMain",
-        L"PixelShader.hlsl", "PSMain"))
+    if(!mShader->Initialize(device, L"VertexShader.hlsl", "VSMain", L"PixelShader.hlsl", "PSMain"))
     {
         MessageBox(nullptr, L"Shader init failed", L"Error", MB_OK);
         return false;
@@ -67,11 +65,10 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     };
 
     UINT numElements = _countof(layoutDesc);
-
     ID3DBlob* vsBlob = mShader->GetVSBlob();
 
     HRESULT hr = device->CreateInputLayout(
-        layoutDesc,
+        layoutDesc, 
         numElements,
         vsBlob->GetBufferPointer(),
         vsBlob->GetBufferSize(),
@@ -87,7 +84,6 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
     cbd.Usage = D3D11_USAGE_DEFAULT;
     cbd.ByteWidth = sizeof(MatrixBuffer);
     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cbd.CPUAccessFlags = 0;
 
     hr = device->CreateBuffer(&cbd, nullptr, &mMatrixBuffer);
     if(FAILED(hr))
@@ -114,6 +110,7 @@ bool Renderer::Initialize(HWND hWnd, int width, int height)
         MessageBox(nullptr, L"SkyBox rendering init failed", L"Error", MB_OK);
         return false;
     }
+
     return true;
 }
 
@@ -136,6 +133,12 @@ void Renderer::Cleanup()
     {
         mMatrixBuffer->Release();
         mMatrixBuffer = nullptr;
+    }
+
+    if(mSkyBox)
+    {
+        delete mSkyBox;
+        mSkyBox = nullptr;
     }
 
     if(mPipeline)
@@ -168,6 +171,11 @@ void Renderer::Draw(std::vector<Actor*>& actors)
 {
     ID3D11DeviceContext* context = mPipeline->GetDeviceContext();
 
+    // SkyBox 렌더링
+    SetSkyBoxPipeline();
+    mSkyBox->Render(context, mMatrixBuffer, mView, mProj);
+
+    // 일반 오브젝트 렌더링
     mShader->SetShader(context);
     context->IASetInputLayout(mInputLayout);
 
@@ -185,58 +193,11 @@ void Renderer::SetCameraMatrices(const DirectX::XMMATRIX& view, const DirectX::X
 
 bool Renderer::InitSkyBox()
 {
-    ID3DBlob* vsBlob = nullptr;
-    ID3DBlob* psBlob = nullptr;
-
-    HRESULT hr = D3DCompileFromFile(
-        L"SkyBoxVertex.hlsl", nullptr, nullptr, 
-        "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
-
-    if(FAILED(hr))
-    {
-        return false;
-    }
-
-    hr = D3DCompileFromFile(
-        L"SkyBoxPixel.hlsl", nullptr, nullptr, 
-        "main", "ps_5_0", 0, 0, &psBlob, nullptr);
-
-    if(FAILED(hr))
-    {
-        vsBlob->Release();
-        return false;
-    }
-
     auto device = mPipeline->GetDevice();
+    auto context = mPipeline->GetDeviceContext();
 
-    device->CreateVertexShader(
-        vsBlob->GetBufferPointer(),
-        vsBlob->GetBufferSize(), 
-        nullptr,
-        &mSkyBoxVS);
-
-    device->CreatePixelShader(
-        psBlob->GetBufferPointer(),
-        psBlob->GetBufferSize(), 
-        nullptr,
-        &mSkyBoxPS);
-
-    D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
-    };
-
-    device->CreateInputLayout(
-        layoutDesc,
-        ARRAYSIZE(layoutDesc),
-        vsBlob->GetBufferPointer(),
-        vsBlob->GetBufferSize(),
-        &mSkyBoxIL);
-
-    vsBlob->Release();
-    psBlob->Release();
-
-    return true;
-    return true;
+    mSkyBox = new SkyBox(device, context);
+    return mSkyBox != nullptr;
 }
 
 void Renderer::SetSkyBoxPipeline()
@@ -247,9 +208,7 @@ void Renderer::SetSkyBoxPipeline()
     context->PSSetShader(mSkyBoxPS, nullptr, 0);
 }
 
-void Renderer::BindSkyBoxTex(
-    ID3D11ShaderResourceView* skyboxSRV,
-    ID3D11SamplerState* sampler)
+void Renderer::BindSkyBoxTex(ID3D11ShaderResourceView* skyboxSRV, ID3D11SamplerState* sampler)
 {
     auto context = mPipeline->GetDeviceContext();
     context->PSSetShaderResources(0, 1, &skyboxSRV);

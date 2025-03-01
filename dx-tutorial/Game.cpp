@@ -381,6 +381,11 @@ void Game::render()
             mSkyBox->Render(
                 mRenderer->GetPipeline()->GetDeviceContext(),
                 mRenderer->GetMatrixBuffer(), view, proj);
+
+            ID3D11RenderTargetView* rtv = mRenderer->GetPipeline()->GetRenderTargetView();
+
+            mRenderer->GetPipeline()->GetDeviceContext()->OMSetRenderTargets(
+                1, &rtv, mRenderer->GetPipeline()->GetDepthStencilView());
         }
 
         mRenderer->Draw(mActors);
@@ -390,6 +395,11 @@ void Game::render()
         wchar_t buff[64];
         swprintf_s(buff, L"Score: %d", mScore);
         mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
+
+        ID3D11RenderTargetView* rtv = mRenderer->GetPipeline()->GetRenderTargetView();
+
+        mRenderer->GetPipeline()->GetDeviceContext()->OMSetRenderTargets(
+            1, &rtv, mRenderer->GetPipeline()->GetDepthStencilView());
         
         mUI->End();
         mRenderer->EndFrame();

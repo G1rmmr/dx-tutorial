@@ -9,6 +9,7 @@
 #include "Actor.h"
 #include "Pipeline.h"
 #include "Shader.h"
+#include "SkyBox.h"
 #include "UI.h"
 
 namespace core
@@ -62,6 +63,7 @@ namespace core
         ID3D11InputLayout* mInputLayout;
 
         Shader* mShader;
+        SkyBox* mSkyBox;
 
         ID3D11VertexShader* mSkyBoxVS;
         ID3D11PixelShader* mSkyBoxPS;
