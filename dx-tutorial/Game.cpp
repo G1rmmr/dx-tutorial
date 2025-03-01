@@ -100,8 +100,9 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     mActors.emplace_back(enemy);
     mPhysics->AddRigidBody(enemy->GetRigidBody());
 
-    auto floor = new Floor(mRenderer->GetPipeline()->GetDevice());
-    mActors.emplace_back(floor);
+
+    auto floor = new Floor();
+    // mActors.emplace_back(floor);
     mPhysics->AddRigidBody(floor->GetRigidBody());
 
     // player
@@ -357,51 +358,35 @@ void Game::update(const float deltaTime)
 
 void Game::render()
 {
-    if(mRenderer)
+    if(!mRenderer)
     {
-        mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
-
-        if(mSkyBox)
-        {
-            XMMATRIX view = mPlayer->GetViewMatrix();
-
-            constexpr float fovAngleY = XMConvertToRadians(60.f);
-            const float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
-            const float nearZ = 0.1f;
-            const float farZ = 100.0f;
-
-            XMMATRIX proj = XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
-
-            mRenderer->SetSkyBoxPipeline();
-
-            mRenderer->BindSkyBoxTex(
-                mSkyBox->GetCubeMapSRV(),
-                mSkyBox->GetSamplerState());
-
-            mSkyBox->Render(
-                mRenderer->GetPipeline()->GetDeviceContext(),
-                mRenderer->GetMatrixBuffer(), view, proj);
-
-            ID3D11RenderTargetView* rtv = mRenderer->GetPipeline()->GetRenderTargetView();
-
-            mRenderer->GetPipeline()->GetDeviceContext()->OMSetRenderTargets(
-                1, &rtv, mRenderer->GetPipeline()->GetDepthStencilView());
-        }
-
-        mRenderer->Draw(mActors);
-
-        mUI->Begin();
-
-        wchar_t buff[64];
-        swprintf_s(buff, L"Score: %d", mScore);
-        mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
-
-        ID3D11RenderTargetView* rtv = mRenderer->GetPipeline()->GetRenderTargetView();
-
-        mRenderer->GetPipeline()->GetDeviceContext()->OMSetRenderTargets(
-            1, &rtv, mRenderer->GetPipeline()->GetDepthStencilView());
-        
-        mUI->End();
-        mRenderer->EndFrame();
+        return;
     }
+
+    mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
+
+    if(mSkyBox)
+    {
+        XMMATRIX view = mPlayer->GetViewMatrix();
+
+        float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
+        XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect, 0.1f, 100.f);
+
+        mSkyBox->Render(
+            mRenderer->GetPipeline()->GetDeviceContext(),
+            mRenderer->GetMatrixBuffer(),
+            view,
+            proj);
+    }
+
+    mRenderer->Draw(mActors);
+
+    mUI->Begin();
+
+    wchar_t buff[64];
+    swprintf_s(buff, L"Score: %d", mScore);
+    mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
+
+    mUI->End();
+    mRenderer->EndFrame();
 }

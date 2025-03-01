@@ -28,9 +28,6 @@ Renderer::Renderer()
     , mShader(nullptr)
     , mView(DirectX::XMMatrixIdentity())
     , mProj(DirectX::XMMatrixIdentity())
-    , mSkyBoxVS(nullptr)
-    , mSkyBoxPS(nullptr)
-    , mSkyBoxIL(nullptr)
     , mSkyBox(nullptr)
 {
 }
@@ -171,8 +168,6 @@ void Renderer::Draw(std::vector<Actor*>& actors)
 {
     ID3D11DeviceContext* context = mPipeline->GetDeviceContext();
 
-    // SkyBox 렌더링
-    SetSkyBoxPipeline();
     mSkyBox->Render(context, mMatrixBuffer, mView, mProj);
 
     // 일반 오브젝트 렌더링
@@ -198,19 +193,4 @@ bool Renderer::InitSkyBox()
 
     mSkyBox = new SkyBox(device, context);
     return mSkyBox != nullptr;
-}
-
-void Renderer::SetSkyBoxPipeline()
-{
-    auto context = mPipeline->GetDeviceContext();
-    context->IASetInputLayout(mSkyBoxIL);
-    context->VSSetShader(mSkyBoxVS, nullptr, 0);
-    context->PSSetShader(mSkyBoxPS, nullptr, 0);
-}
-
-void Renderer::BindSkyBoxTex(ID3D11ShaderResourceView* skyboxSRV, ID3D11SamplerState* sampler)
-{
-    auto context = mPipeline->GetDeviceContext();
-    context->PSSetShaderResources(0, 1, &skyboxSRV);
-    context->PSSetSamplers(0, 1, &sampler);
 }

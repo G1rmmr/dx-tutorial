@@ -5,6 +5,7 @@
 #include <dxgi.h>
 
 #include <d2d1.h>
+
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
@@ -127,12 +128,13 @@ bool UI::createRenderTarget()
         }
         return false;
     }
+
     D2D1_RENDER_TARGET_PROPERTIES rtProps =
         D2D1::RenderTargetProperties(
             D2D1_RENDER_TARGET_TYPE_DEFAULT,
             D2D1::PixelFormat(
-            DXGI_FORMAT_B8G8R8A8_UNORM,
-            D2D1_ALPHA_MODE_PREMULTIPLIED),
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            D2D1_ALPHA_MODE_IGNORE),
             0.0f,
             0.0f);
 

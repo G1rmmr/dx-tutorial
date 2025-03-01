@@ -34,11 +34,6 @@ namespace core
             const DirectX::XMMATRIX& proj);
 
         bool InitSkyBox();
-        void SetSkyBoxPipeline();
-
-        void BindSkyBoxTex(
-            ID3D11ShaderResourceView* skyboxSRV,
-            ID3D11SamplerState* sampler);
 
         inline Pipeline* GetPipeline() const
         {
@@ -64,10 +59,6 @@ namespace core
 
         Shader* mShader;
         SkyBox* mSkyBox;
-
-        ID3D11VertexShader* mSkyBoxVS;
-        ID3D11PixelShader* mSkyBoxPS;
-        ID3D11InputLayout* mSkyBoxIL;
 
         Pipeline* mPipeline;
     };

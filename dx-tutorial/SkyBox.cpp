@@ -1,15 +1,18 @@
 ﻿#include "SkyBox.h"
+#include "Shader.h"
+
 #include <stdexcept>
 #include <fstream>
 #include <vector>
 #include <array>
 
-using namespace core;
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-struct Vertex
-{ 
-    XMFLOAT3 Pos;
-};
+const float BOX_SIZE = 50.f;
+
+using namespace DirectX;
+using namespace core;
 
 SkyBox::SkyBox(
     ID3D11Device* device, 
@@ -18,24 +21,12 @@ SkyBox::SkyBox(
     , mIndexBuffer(nullptr)
     , mSamplerState(nullptr)
     , mCubeMapSRV(nullptr)
+    , mIL(nullptr)
+    , mShader(nullptr)
 {
     initCubeMesh(device);
     loadCubeMap(device);
-
-    D3D11_SAMPLER_DESC samplerDesc = {};
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    samplerDesc.MinLOD = 0;
-    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-    HRESULT hr = device->CreateSamplerState(&samplerDesc, &mSamplerState);
-    if(FAILED(hr))
-    {
-        throw std::runtime_error("Failed to create sampler state.");
-    }
+    initShaders(device);
 }
 
 SkyBox::~SkyBox()
@@ -63,47 +54,90 @@ SkyBox::~SkyBox()
         mCubeMapSRV->Release();
         mCubeMapSRV = nullptr;
     }
+
+    if(mIL)
+    {
+        mIL->Release();
+        mIL = nullptr;
+    }
 }
 
 void SkyBox::initCubeMesh(ID3D11Device* device)
 {
-    Vertex vertices[] = {
-        {{-10.f, -10.f, -10.f}},
-        {{-10.f,  10.f, -10.f}},
-        {{10.f,  10.f, -10.f}},
-        {{10.f, -10.f, -10.f}},
-        {{-10.f, -10.f,  10.f}},
-        {{-10.f,  10.f,  10.f}},
-        {{10.f,  10.f,  10.f}},
-        {{10.f, -10.f,  10.f}}
+    struct Vertex
+    {
+        float X;
+        float Y;
+        float Z;
+        float U;
+        float V;
     };
 
-    unsigned int indices[] = {
-        0, 1, 2, 0, 2, 3,
-        4, 6, 5, 4, 7, 6,
-        4, 5, 1, 4, 1, 0,
-        3, 2, 6, 3, 6, 7,
-        1, 5, 6, 1, 6, 2,
-        4, 0, 3, 4, 3, 7
+    Vertex vertices[] =
+    {
+        // front face
+        { -BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 0.f, 0.f },
+        {  BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 1.f, 0.f },
+        {  BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 1.f, 1.f },
+        { -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.f, 1.f },
+
+        // back face
+        {  BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 0.f, 0.f },
+        { -BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 1.f, 0.f },
+        { -BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 1.f, 1.f },
+        {  BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 0.f, 1.f },
+
+        // left face
+        { -BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 0.f, 0.f },
+        { -BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 1.f, 0.f },
+        { -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 1.f, 1.f },
+        { -BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 0.f, 1.f },
+
+        // right face
+        {  BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 0.f, 0.f },
+        {  BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 1.f, 0.f },
+        {  BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 1.f, 1.f },
+        {  BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.f, 1.f },
+
+        // top face
+        { -BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 0.f, 0.f },
+        {  BOX_SIZE,  BOX_SIZE,  BOX_SIZE, 1.f, 0.f },
+        {  BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 1.f, 1.f },
+        { -BOX_SIZE,  BOX_SIZE, -BOX_SIZE, 0.f, 1.f },
+
+        // bottom face
+        { -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.f, 0.f },
+        {  BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 1.f, 0.f },
+        {  BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 1.f, 1.f },
+        { -BOX_SIZE, -BOX_SIZE,  BOX_SIZE, 0.f, 1.f }
     };
 
-    D3D11_BUFFER_DESC vbd = {sizeof(vertices), D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER};
-    D3D11_SUBRESOURCE_DATA vertexData = {vertices};
-
-    HRESULT hr = device->CreateBuffer(&vbd, &vertexData, &mVertexBuffer);
-    if(FAILED(hr))
+    UINT indices[] =
     {
-        throw std::runtime_error("Failed to create vertex buffer.");
-    }
+        0, 2, 1, 0, 3, 2, // front
+        4, 6, 5, 4, 7, 6, // back
+        8, 10, 9, 8, 11, 10, // left
+        12, 14, 13, 12, 15, 14, // right
+        16, 18, 17, 16, 19, 18, // top
+        20, 22, 21, 20, 23, 22  // bottom
+    };
 
-    D3D11_BUFFER_DESC ibd = {sizeof(indices), D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER};
-    D3D11_SUBRESOURCE_DATA indexData = {indices};
+    D3D11_BUFFER_DESC buffDsc{};
+    buffDsc.Usage = D3D11_USAGE_DEFAULT;
+    buffDsc.ByteWidth = sizeof(vertices);
+    buffDsc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-    hr = device->CreateBuffer(&ibd, &indexData, &mIndexBuffer);
-    if(FAILED(hr))
-    {
-        throw std::runtime_error("Failed to create index buffer.");
-    }
+    D3D11_SUBRESOURCE_DATA initVData{};
+    initVData.pSysMem = vertices;
+    device->CreateBuffer(&buffDsc, &initVData, &mVertexBuffer);
+
+    buffDsc.ByteWidth = sizeof(indices);
+    buffDsc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+    D3D11_SUBRESOURCE_DATA initIData{};
+    initIData.pSysMem = indices;
+
+    device->CreateBuffer(&buffDsc, &initIData, &mIndexBuffer);
 }
 
 bool SkyBox::loadCubeTex(
@@ -112,149 +146,158 @@ bool SkyBox::loadCubeTex(
     UINT& outRowPitch, 
     const std::string& filePath)
 {
-    std::ifstream file(filePath, std::ios::binary);
-    if(!file)
+    int width;
+    int height;
+    int comp;
+
+    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &comp, 4);
+    if(!data)
     {
-        MessageBox(nullptr, L"Failed to open TGA file", L"Error", MB_OK);
         return false;
     }
 
-    TGAHeader header;
-    file.read(reinterpret_cast<char*>(&header), sizeof(TGAHeader));
+    outRowPitch = static_cast<UINT>(width * 4);
+    size_t totalSize = static_cast<size_t>(width) * height * 4;
+    outPixels.resize(totalSize);
+    memcpy(outPixels.data(), data, totalSize);
 
-    if(header.ImageType != 2) 
-    {
-        file.close();
-        MessageBox(nullptr, L"Unsupported TGA format", L"Error", MB_OK);
-        return false;
-    }
-
-    int width = header.Width;
-    int height = header.Height;
-    int bpp = header.BPP / 8;
-
-
-    std::vector<uint8_t> imageData(width * height * bpp);
-    file.read(reinterpret_cast<char*>(imageData.data()), imageData.size());
-    file.close();
-
-    outPixels.resize(width * height * 4);
-    for(int i = 0; i < width * height; i++)
-    {
-        outPixels[i * 4 + 0] = imageData[i * bpp + 2]; // Red
-        outPixels[i * 4 + 1] = imageData[i * bpp + 1]; // Green
-        outPixels[i * 4 + 2] = imageData[i * bpp + 0]; // Blue
-        outPixels[i * 4 + 3] = (bpp == 4) ? imageData[i * bpp + 3] : 255; // Alpha
-    }
-
-    outRowPitch = width * 4;
+    stbi_image_free(data);
     return true;
 }
 
 void SkyBox::loadCubeMap(ID3D11Device* device)
 {
-    const std::array<std::string, 6> files = {
-        "bk.tga",
-        "dn.tga",
-        "ft.tga",
-        "lf.tga",
-        "rt.tga",
-        "up.tga"
+    const std::array<std::string, 6> faces = {
+        "lf.tga", // -X: 왼쪽
+        "rt.tga", // +X: 오른쪽
+        "up.tga", // +Y: 위
+        "dn.tga", // -Y: 아래
+        "ft.tga", // +Z: 앞
+        "bk.tga"  // -Z: 뒤
     };
 
-    std::array<std::vector<uint8_t>, 6> pixelData;
-    std::array<UINT, 6> rowPitch;
-
+    std::vector<std::vector<std::uint8_t>> pixelData(6);
+    UINT rowPitch = 0;
     for(int i = 0; i < 6; ++i)
     {
-        if(!loadCubeTex(device, pixelData[i], rowPitch[i], files[i]))
+        if(!loadCubeTex(device, pixelData[i], rowPitch, faces[i]))
         {
-            throw std::runtime_error("Failed to load cube map texture: " + files[i]);
+            return;
         }
     }
 
-    for(int i = 0; i < 6; ++i)
-    {
-        if(pixelData[i].empty() || rowPitch[i] == 0)
-        {
-            throw std::runtime_error("Invalid pixel data or row pitch for texture: " + files[i]);
-        }
-    }
-
-    D3D11_TEXTURE2D_DESC texDesc = {};
+    D3D11_TEXTURE2D_DESC texDesc{};
     texDesc.Width = 1024;
     texDesc.Height = 1024;
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 6;
-    texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     texDesc.SampleDesc.Count = 1;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
     texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-    std::vector<D3D11_SUBRESOURCE_DATA> subresourceData(6);
+    D3D11_SUBRESOURCE_DATA subData[6];
     for(int i = 0; i < 6; ++i)
     {
-        subresourceData[i].pSysMem = pixelData[i].data();
-        subresourceData[i].SysMemPitch = rowPitch[i];
-        subresourceData[i].SysMemSlicePitch = 0;
+        subData[i].pSysMem = pixelData[i].data();
+        subData[i].SysMemPitch = rowPitch;
+        subData[i].SysMemSlicePitch = 0;
     }
 
-    ID3D11Texture2D* cubeTexture = nullptr;
-    HRESULT hr = device->CreateTexture2D(&texDesc, subresourceData.data(), &cubeTexture);
-    if(FAILED(hr))
-    {
-        throw std::runtime_error("Failed to create cube texture.");
-    }
+    ID3D11Texture2D* texArray = nullptr;
+    device->CreateTexture2D(&texDesc, subData, &texArray);
 
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = texDesc.Format;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-    srvDesc.TextureCube.MipLevels = texDesc.MipLevels;
     srvDesc.TextureCube.MostDetailedMip = 0;
+    srvDesc.TextureCube.MipLevels = 1;
 
-    hr = device->CreateShaderResourceView(cubeTexture, &srvDesc, &mCubeMapSRV);
-    if(FAILED(hr))
+    device->CreateShaderResourceView(texArray, &srvDesc, &mCubeMapSRV);
+
+    if(texArray) 
     {
-        throw std::runtime_error("Failed to create CubeMap SRV.");
+        texArray->Release();
     }
 
-    cubeTexture->Release();
+    D3D11_SAMPLER_DESC sampDesc{};
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    device->CreateSamplerState(&sampDesc, &mSamplerState);
 }
 
-void SkyBox::Render(
-    ID3D11DeviceContext* context, 
-    ID3D11Buffer* matrixBuf, 
-    const XMMATRIX& view, 
-    const XMMATRIX& proj)
+bool SkyBox::initShaders(ID3D11Device* device)
 {
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    
-    XMMATRIX modifiedView = view;
-    modifiedView.r[3] = XMVectorSet(0, 0, 0, 1);
-
-    struct MatrixBufferType
+    mShader = new Shader();
+    if(!mShader->Initialize(device, L"SkyBoxVS.hlsl", "VSMain", L"SkyBoxPS.hlsl", "PSMain"))
     {
-        XMMATRIX View;
-        XMMATRIX Proj;
+        return false;
+    }
+
+    ID3DBlob* vsBlob = mShader->GetVSBlob();
+    if(!vsBlob)
+    {
+        return false;
     };
 
-    MatrixBufferType Matbuf;
+    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
 
-    Matbuf.View = XMMatrixTranspose(modifiedView);
-    Matbuf.Proj = XMMatrixTranspose(proj);
+    HRESULT hr = device->CreateInputLayout(
+        layoutDesc,
+        _countof(layoutDesc),
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(),
+        &mIL);
 
-    context->UpdateSubresource(matrixBuf, 0, nullptr, &Matbuf, 0, 0);
+    if(FAILED(hr)) 
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+void SkyBox::Render(
+    ID3D11DeviceContext* context,
+    ID3D11Buffer* matrixBuf,
+    const DirectX::XMMATRIX& view,
+    const DirectX::XMMATRIX& proj)
+{
+    struct MatrixBufferType
+    {
+        DirectX::XMMATRIX World;
+        DirectX::XMMATRIX View;
+        DirectX::XMMATRIX Proj;
+    };
+
+    MatrixBufferType matrices;
+
+    matrices.World = DirectX::XMMatrixIdentity();
+    matrices.View = DirectX::XMMatrixTranspose(view);
+    matrices.Proj = DirectX::XMMatrixTranspose(proj);
+
+    context->UpdateSubresource(matrixBuf, 0, nullptr, &matrices, 0, 0);
+
+    mShader->SetShader(context);
+    context->IASetInputLayout(mIL);
+
+    UINT stride = sizeof(float) * 5;
+    UINT offset = 0;
 
     context->IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
     context->IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    for(int i = 0; i < 6; ++i)
-    {
-        context->PSSetShaderResources(0, 1, &mCubeMapSRV);
-        context->PSSetSamplers(0, 1, &mSamplerState);
-        context->DrawIndexed(6, i * 6, 0);
-    }
+    context->PSSetShaderResources(0, 1, &mCubeMapSRV);
+    context->PSSetSamplers(0, 1, &mSamplerState);
+
+    context->DrawIndexed(36, 0, 0);
 }
