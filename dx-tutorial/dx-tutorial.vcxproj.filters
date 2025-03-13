@@ -1,47 +1,186 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl" />
-    <FxCompile Include="VertexShader.hlsl" />
-    <FxCompile Include="SkyBoxVS.hlsl" />
-    <FxCompile Include="SkyBoxPS.hlsl" />
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyBoxPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyBoxVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="Physics.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="Pipeline.cpp" />
-    <ClCompile Include="Floor.cpp" />
-    <ClCompile Include="UI.cpp" />
-    <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="Enemy.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Floor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="Physics.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="Pipeline.h" />
-    <ClInclude Include="Actor.h" />
-    <ClInclude Include="Floor.h" />
-    <ClInclude Include="UI.h" />
-    <ClInclude Include="SkyBox.h" />
+    <ClInclude Include="Enemy.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Floor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipeline.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyBox.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="arch.md" />
     <None Include="..\vcpkg.json" />
+    <None Include="fbxs\elite.fbx">
+      <Filter>assets\models</Filter>
+    </None>
+    <None Include="fbxs\enemy.fbx">
+      <Filter>assets\models</Filter>
+    </None>
+    <None Include="fbxs\grenades.fbx">
+      <Filter>assets\models</Filter>
+    </None>
+    <None Include="fbxs\machine-gun.fbx">
+      <Filter>assets\models</Filter>
+    </None>
+    <None Include="fbxs\pistol.fbx">
+      <Filter>assets\models</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="bk.tga" />
-    <Image Include="dn.tga" />
-    <Image Include="ft.tga" />
-    <Image Include="lf.tga" />
-    <Image Include="rt.tga" />
-    <Image Include="up.tga" />
+    <Image Include="bk.tga">
+      <Filter>assets\images</Filter>
+    </Image>
+    <Image Include="dn.tga">
+      <Filter>assets\images</Filter>
+    </Image>
+    <Image Include="ft.tga">
+      <Filter>assets\images</Filter>
+    </Image>
+    <Image Include="lf.tga">
+      <Filter>assets\images</Filter>
+    </Image>
+    <Image Include="rt.tga">
+      <Filter>assets\models</Filter>
+    </Image>
+    <Image Include="up.tga">
+      <Filter>assets\models</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="wavs\assaultriflereload1.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\die1.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\gun_fire.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\gun_fire2.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\gunreload1.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\hit1.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\hit2.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\hit3.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\hit4.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\hit5.wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+    <Media Include="wavs\lmg_fire01 (online-audio-converter.com).wav">
+      <Filter>assets\sounds</Filter>
+    </Media>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="assets">
+      <UniqueIdentifier>{67a87a21-7682-4703-a4fc-dd2b9cb09325}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\sounds">
+      <UniqueIdentifier>{4855779c-1642-43c7-b291-0d095c6bb9c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\images">
+      <UniqueIdentifier>{15f52592-f043-4379-ada8-50fe9e7907d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\models">
+      <UniqueIdentifier>{e5276c80-1af2-4f72-88e2-a01b276981d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{d6c169b6-2060-401e-bef0-288fa5f6a2c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{4069c80e-f169-4c7a-9c59-1cf565b3ba34}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="credit.txt">
+      <Filter>assets</Filter>
+    </Text>
   </ItemGroup>
 </Project>

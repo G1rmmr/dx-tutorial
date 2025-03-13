@@ -96,7 +96,7 @@ bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
     }
 
     // Actors
-    auto enemy = new Enemy(mRenderer->GetPipeline()->GetDevice());
+    auto enemy = new Enemy(mRenderer->GetPipeline()->GetDevice(), "fbxs/FBX 2013/enemy.fbx");
     mActors.emplace_back(enemy);
     mPhysics->AddRigidBody(enemy->GetRigidBody());
 
@@ -287,8 +287,15 @@ LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         int deltaX = x - centerX;
         int deltaY = y - centerY;
-
-        mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
+        
+        if(mPlayer)
+        {
+            mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
+        }
+        else
+        {
+            return 1;
+        }
 
         POINT pt = {0, 0};
         pt.x = centerX;
@@ -349,7 +356,7 @@ void Game::update(const float deltaTime)
     constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
     const float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
     const float nearZ = 0.1f;
-    const float farZ = 100.0f;
+    const float farZ = 1000.0f;
 
     DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
 
@@ -370,7 +377,7 @@ void Game::render()
         XMMATRIX view = mPlayer->GetViewMatrix();
 
         float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
-        XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect, 0.1f, 100.f);
+        XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect, 0.1f, 1000.f);
 
         mSkyBox->Render(
             mRenderer->GetPipeline()->GetDeviceContext(),

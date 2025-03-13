@@ -12,6 +12,7 @@ namespace core
 	public:
 		Enemy();
 		Enemy(ID3D11Device* device);
+		Enemy(ID3D11Device* device, const std::string& fbxPath);
 
 		~Enemy() override;
 
@@ -31,7 +32,10 @@ namespace core
 		}
 
 	private:
+		void loadModel(ID3D11Device* device, const std::string& filePath);
+
 		ID3D11Buffer* mVertexBuf;
+		UINT mVertexCount;
 
 		btRigidBody* mRigidBody;
 		btCollisionShape* mCollisionShape;

@@ -1,5 +1,8 @@
 #include "Enemy.h"
 
+#include <fbxsdk.h>
+#include <vector>
+
 using namespace core;
 using namespace DirectX;
 
@@ -71,6 +74,7 @@ Enemy::Enemy()
 	, mRigidBody(nullptr)
 	, mCollisionShape(nullptr)
 	, mMotionState(nullptr)
+    , mVertexCount(0)
 {
 	btTransform startTransform;
 	startTransform.setIdentity();
@@ -116,6 +120,12 @@ Enemy::Enemy(ID3D11Device* device)
     {
         MessageBox(nullptr, TEXT("Enemy init failed!"), TEXT("ERROR"), MB_OK);
     }
+}
+
+Enemy::Enemy(ID3D11Device* device, const std::string& fbxPath)
+    : Enemy()
+{
+    loadModel(device, fbxPath);
 }
 
 Enemy::~Enemy()
@@ -192,5 +202,90 @@ void Enemy::Render(
 
     context->IASetVertexBuffers(0, 1, &mVertexBuf, &stride, &offset);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->Draw(36, 0);
+    context->Draw(mVertexCount, 0);
+}
+
+void Enemy::loadModel(ID3D11Device* device, const std::string& filePath)
+{
+    FbxManager* fbxManager = FbxManager::Create();
+    FbxIOSettings* ios = FbxIOSettings::Create(fbxManager, IOSROOT);
+    fbxManager->SetIOSettings(ios);
+
+    FbxImporter* importer = FbxImporter::Create(fbxManager, "");
+    importer->SetIOSettings(fbxManager->GetIOSettings());
+
+    if(!importer->Initialize(filePath.c_str(), -1, fbxManager->GetIOSettings()))
+    {
+        MessageBoxA(nullptr, importer->GetStatus().GetErrorString(), "ERROR", MB_OK);
+        return;
+    }
+
+    FbxScene* scene = FbxScene::Create(fbxManager, "MyScene");
+    importer->Import(scene);
+    importer->Destroy();
+
+    FbxNode* rootNode = scene->GetRootNode();
+    if(!rootNode)
+    {
+        MessageBox(nullptr, TEXT("FBX RootNode ¾øÀ½!"), TEXT("ERROR"), MB_OK);
+        return;
+    }
+
+    std::vector<Vertex> vertices;
+
+    for(int i = 0; i < rootNode->GetChildCount(); i++)
+    {
+        FbxNode* childNode = rootNode->GetChild(i);
+        FbxMesh* mesh = childNode->GetMesh();
+
+        if(!mesh)
+        {
+            continue;
+        }
+        for(int j = 0; j < mesh->GetPolygonCount(); ++j)
+        {
+            for(int k = 0; k < 3; ++k)
+            {
+                int controlPointIndex = mesh->GetPolygonVertex(j, k);
+                FbxVector4 vertex = mesh->GetControlPointAt(controlPointIndex);
+                
+                XMFLOAT3 scale = {0.2f, 0.2f, 0.2f};
+
+                vertices.push_back(Vertex{
+                    XMFLOAT3(
+                        (float)vertex[0] * scale.x, 
+                        (float)vertex[1] * scale.y, 
+                        (float)vertex[2] * scale.z),
+                    XMFLOAT4(1, 1, 1, 1)});
+            }
+        }
+    }
+
+    if(!vertices.empty())
+    {
+        D3D11_BUFFER_DESC bd = {};
+        bd.Usage = D3D11_USAGE_DEFAULT;
+        bd.ByteWidth = static_cast<UINT>(vertices.size() * sizeof(Vertex));
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = 0;
+
+        D3D11_SUBRESOURCE_DATA initData = {};
+        initData.pSysMem = vertices.data();
+
+        HRESULT hr = device->CreateBuffer(&bd, &initData, &mVertexBuf);
+        if(FAILED(hr))
+        {
+            MessageBox(nullptr, TEXT("FBX VertexBuffer creation failed!"), TEXT("ERROR"), MB_OK);
+        }
+        else
+        {
+            mVertexCount = static_cast<UINT>(vertices.size());
+        }
+    }
+    else
+    {
+        MessageBox(nullptr, TEXT("FBX!"), TEXT("ERROR"), MB_OK);
+    }
+
+    fbxManager->Destroy();
 }
