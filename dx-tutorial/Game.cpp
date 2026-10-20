@@ -4,10 +4,13 @@
 #include "Enemy.h"
 #include "Floor.h"
 #include "Mesh.h"
+#include "ModelAsset.h"
 #include "Rigidbody.h"
 #include "Shader.h"
+#include "Transform.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <numeric>
 #include <span>
 #include <stdexcept>
@@ -27,6 +30,26 @@ namespace
             std::span<const std::uint32_t>(indices));
         object.EmplaceComponent<Shader>(shader);
     }
+
+    void addDrawable(Object& object, ID3D11Device* device, const ModelAsset& model,
+        const Shader& shader)
+    {
+        object.EmplaceComponent<Mesh>(device, std::span<const Vertex>(model.Vertices),
+            std::span<const std::uint32_t>(model.Indices));
+        object.EmplaceComponent<Shader>(shader);
+    }
+
+    class ModelProp final : public Object
+    {
+    public:
+        explicit ModelProp(const XMFLOAT3& position)
+        {
+            IsStatic = true;
+            EmplaceComponent<Transform>().Position = position;
+        }
+
+        void Update(float) override {}
+    };
 }
 
 Game::Game(Window& window)
@@ -46,10 +69,39 @@ Game::Game(Window& window)
     mPhysics.AddRigidBody(*floor->GetComponent<Rigidbody>());
     mObjects.emplace_back(std::move(floor));
 
-    auto enemy = std::make_unique<Enemy>(XMFLOAT3(0.f, 1.f, 8.f), XMFLOAT3(1.f, 1.f, 1.f));
-    addDrawable(*enemy, mRenderer.GetDevice(), enemy->GetVertices(), shader);
-    mPhysics.AddRigidBody(*enemy->GetComponent<Rigidbody>());
-    mObjects.emplace_back(std::move(enemy));
+    // Import once at startup, keeping the existing Object/Mesh rendering path.
+    ModelImportOptions soldierOptions;
+    soldierOptions.Size = 2.4f;
+    soldierOptions.Origin = ModelOrigin::Center;
+    const auto addSoldier = [&](const wchar_t* filename, float x, float z)
+    {
+        const ModelAsset model = LoadFbxModel(std::filesystem::path(L"assets/models") / filename,
+            soldierOptions);
+        const XMFLOAT3 halfExtents((model.Max.x - model.Min.x) * 0.5f,
+            (model.Max.y - model.Min.y) * 0.5f, (model.Max.z - model.Min.z) * 0.5f);
+        auto enemy = std::make_unique<Enemy>(XMFLOAT3(x, halfExtents.y, z), halfExtents);
+        addDrawable(*enemy, mRenderer.GetDevice(), model, shader);
+        mPhysics.AddRigidBody(*enemy->GetComponent<Rigidbody>());
+        mObjects.emplace_back(std::move(enemy));
+    };
+    addSoldier(L"enemy.fbx", -2.f, 8.f);
+    addSoldier(L"elite.fbx", 2.f, 10.f);
+
+    // Display the weapon assets as scenery; gameplay remains in Player.
+    const auto addProp = [&](const wchar_t* filename, float size, const XMFLOAT3& position)
+    {
+        ModelImportOptions options;
+        options.Size = size;
+        options.SizeAxis = ModelSizeAxis::Longest;
+        const ModelAsset model = LoadFbxModel(std::filesystem::path(L"assets/models") / filename,
+            options);
+        auto prop = std::make_unique<ModelProp>(position);
+        addDrawable(*prop, mRenderer.GetDevice(), model, shader);
+        mObjects.emplace_back(std::move(prop));
+    };
+    addProp(L"pistol.fbx", 0.8f, XMFLOAT3(-2.f, 0.f, 4.f));
+    addProp(L"machine-gun.fbx", 1.4f, XMFLOAT3(0.f, 0.f, 4.f));
+    addProp(L"grenades.fbx", 0.6f, XMFLOAT3(2.f, 0.f, 4.f));
 
     auto player = std::make_unique<Player>();
     mPlayer = player.get();

@@ -1,0 +1,28 @@
+All Assets By opengameart.org
+
+// skybox-image-set
+By Jockum Skoglund aka hipshot
+
+// elite-soldier-model
+By hc
+
+// gun-reload-sounds
+By SpringySpringo
+
+// hit-dying-sounds
+By TinyWorlds
+
+// light-machine-gun-sound
+By KuraiWolf
+
+// a-collection-of-gun-sounds
+By AVW
+
+// machine-gun-mesh
+By Harrison1
+
+// pistol-mesh
+By loafbrr_1
+
+// grenade-mesh
+By locarem

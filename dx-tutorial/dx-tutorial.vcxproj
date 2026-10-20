@@ -201,6 +201,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="ModelAsset.cpp" />
+    <ClCompile Include="..\third_party\ufbx\ufbx.c">
+      <CompileAs>CompileAsC</CompileAs>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Rigidbody.cpp" />
@@ -220,6 +225,8 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="MatrixBuffer.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="ModelAsset.h" />
+    <ClInclude Include="..\third_party\ufbx\ufbx.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
@@ -235,6 +242,9 @@
   <ItemGroup>
     <None Include="..\vcpkg.json" />
     <None Include="arch.md" />
+    <None Include="assets\**\*" />
+    <None Include="..\third_party\ufbx\LICENSE" />
+    <None Include="..\third_party\ufbx\README.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">
@@ -289,6 +299,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyRuntimeAssets" AfterTargets="Build">
     <Copy SourceFiles="@(FxCompile);@(Image)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <ModelAssetFile Include="$(MSBuildProjectDirectory)\assets\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModelAssetFile)"
+          DestinationFiles="@(ModelAssetFile->'$(OutDir)assets\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
   </Target>
 
   <ImportGroup Label="ExtensionTargets">

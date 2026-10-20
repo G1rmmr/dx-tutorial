@@ -5,6 +5,8 @@ C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Input.cpp;C:\Users\g1\so
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\main.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\main.obj
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Game.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\Game.obj
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Mesh.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\Mesh.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\ModelAsset.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\ModelAsset.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\third_party\ufbx\ufbx.c;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\ufbx.obj
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Player.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\Player.obj
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Renderer.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\Renderer.obj
 C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Rigidbody.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Debug\Rigidbody.obj

@@ -1,0 +1,16 @@
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Camera.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Camera.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Enemy.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Enemy.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Floor.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Floor.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Input.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Input.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\main.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\main.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Game.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Game.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Mesh.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Mesh.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\ModelAsset.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\ModelAsset.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\third_party\ufbx\ufbx.c;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\ufbx.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Player.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Player.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Renderer.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Renderer.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Rigidbody.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Rigidbody.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Shader.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Shader.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\SkyBox.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\SkyBox.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\UI.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\UI.obj
+C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\Window.cpp;C:\Users\g1\source\repos\G1rmmr\dx-tutorial\dx-tutorial\x64\Release\Window.obj

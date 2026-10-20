@@ -40,6 +40,14 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>component</Filter>
     </ClCompile>
+    <ClCompile Include="ModelAsset.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\ufbx\ufbx.c" />
+    <ClInclude Include="ModelAsset.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third_party\ufbx\ufbx.h" />
     <ClCompile Include="Shader.cpp">
       <Filter>component</Filter>
     </ClCompile>

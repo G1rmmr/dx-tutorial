@@ -1,4 +1,6 @@
 # Prerequisites
+/.model-validation/
+/x64/*/assets/
 *.d
 
 # Compiled Object files
