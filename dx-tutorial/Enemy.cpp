@@ -1,196 +1,80 @@
 #include "Enemy.h"
 
-using namespace core;
+#include "Transform.h"
+#include "Collision.h"
+#include "Rigidbody.h"
+
+using namespace dx;
 using namespace DirectX;
 
-struct Vertex
+Enemy::Enemy(const XMFLOAT3& position, const XMFLOAT3& size)
 {
-	XMFLOAT3 Pos;
-	XMFLOAT4 Color;
-};
-
-static Vertex cubeVertices[] =
-{
-    // ¾Õ¸é (Front)
-    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-
-    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) },
-
-    // µÞ¸é (Back)
-    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-
-    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(0, 1, 0, 1) },
-
-    // ¿ÞÂÊ¸é (Left)
-    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
-    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
-    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
-
-    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 0, 1, 1) },
-    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
-    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(0, 0, 1, 1) },
-
-    // ¿À¸¥ÂÊ¸é (Right)
-    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
-
-    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(1, 1, 0, 1) },
-    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 1, 0, 1) },
-
-    // À­¸é (Top)
-    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
-    { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
-
-    { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
-    { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(1, 0, 1, 1) },
-    { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT4(1, 0, 1, 1) },
-
-    // ¾Æ·§¸é (Bottom)
-    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
-    { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
-    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
-
-    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
-    { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT4(0, 1, 1, 1) },
-    { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT4(0, 1, 1, 1) },
-};
-
-Enemy::Enemy()
-	: mVertexBuf(nullptr)
-	, mRigidBody(nullptr)
-	, mCollisionShape(nullptr)
-	, mMotionState(nullptr)
-{
-	btTransform startTransform;
-	startTransform.setIdentity();
-	startTransform.setOrigin(btVector3(3.0f, 3.0f, 3.0f));
-
-	mCollisionShape = new btBoxShape(btVector3(0.5f, 1.0f, 0.5f));
-
-	btScalar mass = 80.f;
-	bool isDynamic = (mass != 0.0f);
-
-	btVector3 localInertia(0, 0, 0);
-	if(isDynamic)
-	{
-		mCollisionShape->calculateLocalInertia(mass, localInertia);
-	}
-
-	mMotionState = new btDefaultMotionState(startTransform);
-
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, mMotionState, mCollisionShape, localInertia);
-	mRigidBody = new btRigidBody(rbInfo);
-
-    mRigidBody->activate(true);
-    mRigidBody->forceActivationState(DISABLE_DEACTIVATION);
-    mRigidBody->setFriction(0.3f);
-    mRigidBody->setDamping(0.f, 0.f);
-}
-
-Enemy::Enemy(ID3D11Device* device)
-    : Enemy()
-{
-    // Enemy Àü¿ë VertexBuffer »ý¼º
-    D3D11_BUFFER_DESC bd = {};
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(cubeVertices);
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    bd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA initData = {};
-    initData.pSysMem = cubeVertices;
-
-    HRESULT hr = device->CreateBuffer(&bd, &initData, &mVertexBuf);
-    if(FAILED(hr))
+    mVertices =
     {
-        MessageBox(nullptr, TEXT("Enemy init failed!"), TEXT("ERROR"), MB_OK);
-    }
-}
+        // ¾Õ¸é (Front)
+        { XMFLOAT3(-size.x, -size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
+        { XMFLOAT3(-size.x, size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
+        { XMFLOAT3(size.x, size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
 
-Enemy::~Enemy()
-{
-    if(mVertexBuf)
-    {
-        mVertexBuf->Release();
-        mVertexBuf = nullptr;
-    }
+        { XMFLOAT3(-size.x, -size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
+        { XMFLOAT3(size.x, size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
+        { XMFLOAT3(size.x, -size.y, -size.z), XMFLOAT4(1, 0, 0, 1) },
 
-    if(mRigidBody)
-    {
-        delete mRigidBody;
-        mRigidBody = nullptr;
-    }
+        // µÞ¸é (Back)
+        { XMFLOAT3(-size.x, -size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
+        { XMFLOAT3(-size.x, size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
 
-    if(mMotionState)
-    {
-        delete mMotionState;
-        mMotionState = nullptr;
-    }
+        { XMFLOAT3(-size.x, -size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
+        { XMFLOAT3(size.x, -size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(0, 1, 0, 1) },
 
-    if(mCollisionShape)
-    {
-        delete mCollisionShape;
-        mCollisionShape = nullptr;
-    }
-}
+        // ¿ÞÂÊ¸é (Left)
+        { XMFLOAT3(-size.x, -size.y, size.z), XMFLOAT4(0, 0, 1, 1) },
+        { XMFLOAT3(-size.x, size.y, -size.z), XMFLOAT4(0, 0, 1, 1) },
+        { XMFLOAT3(-size.x, size.y, size.z), XMFLOAT4(0, 0, 1, 1) },
 
-void Enemy::SyncPhysics()
-{
-	if(mRigidBody && mRigidBody->getMotionState())
-	{
-		btTransform trans;
-		mRigidBody->getMotionState()->getWorldTransform(trans);
-		btVector3 origin = trans.getOrigin();
+        { XMFLOAT3(-size.x, -size.y, size.z), XMFLOAT4(0, 0, 1, 1) },
+        { XMFLOAT3(-size.x, -size.y, -size.z), XMFLOAT4(0, 0, 1, 1) },
+        { XMFLOAT3(-size.x, size.y, -size.z), XMFLOAT4(0, 0, 1, 1) },
 
-		mPos.x = origin.getX();
-		mPos.y = origin.getY();
-		mPos.z = origin.getZ();
-	}
-}
+        // ¿À¸¥ÂÊ¸é (Right)
+        { XMFLOAT3(size.x, -size.y, -size.z), XMFLOAT4(1, 1, 0, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(1, 1, 0, 1) },
+        { XMFLOAT3(size.x, size.y, -size.z), XMFLOAT4(1, 1, 0, 1) },
 
-void Enemy::Update(const float deltaTime)
-{
+        { XMFLOAT3(size.x, -size.y, -size.z), XMFLOAT4(1, 1, 0, 1) },
+        { XMFLOAT3(size.x, -size.y, size.z), XMFLOAT4(1, 1, 0, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(1, 1, 0, 1) },
 
-}
+        // À­¸é (Top)
+        { XMFLOAT3(-size.x, size.y, -size.z), XMFLOAT4(1, 0, 1, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(1, 0, 1, 1) },
+        { XMFLOAT3(-size.x, size.y, size.z), XMFLOAT4(1, 0, 1, 1) },
 
-void Enemy::Render(
-    ID3D11DeviceContext* context,
-    ID3D11Buffer* matrixBuf,
-    const DirectX::XMMATRIX& view,
-    const DirectX::XMMATRIX& proj)
-{
-    XMMATRIX world = XMMatrixIdentity();
+        { XMFLOAT3(-size.x, size.y, -size.z), XMFLOAT4(1, 0, 1, 1) },
+        { XMFLOAT3(size.x, size.y, -size.z), XMFLOAT4(1, 0, 1, 1) },
+        { XMFLOAT3(size.x, size.y, size.z), XMFLOAT4(1, 0, 1, 1) },
 
-    struct MatrixBuffer
-    {
-        XMMATRIX World;
-        XMMATRIX View;
-        XMMATRIX Proj;
+        // ¾Æ·§¸é (Bottom)
+        { XMFLOAT3(-size.x, -size.y, -size.z), XMFLOAT4(0, 1, 1, 1) },
+        { XMFLOAT3(-size.x, -size.y, size.z), XMFLOAT4(0, 1, 1, 1) },
+        { XMFLOAT3(size.x, -size.y, size.z), XMFLOAT4(0, 1, 1, 1) },
+
+        { XMFLOAT3(-size.x, -size.y, -size.z), XMFLOAT4(0, 1, 1, 1) },
+        { XMFLOAT3(size.x, -size.y, size.z), XMFLOAT4(0, 1, 1, 1) },
+        { XMFLOAT3(size.x, -size.y, -size.z), XMFLOAT4(0, 1, 1, 1) },
     };
 
-    MatrixBuffer bufData = {};
-    bufData.World = XMMatrixTranspose(world);
-    bufData.View = XMMatrixTranspose(view);
-    bufData.Proj = XMMatrixTranspose(proj);
+    IsStatic = true;
+    Transform& transform = EmplaceComponent<Transform>();
+    transform.Position = position;
+    Collision& collision = EmplaceComponent<Collision>(
+        Collision::Create<btBoxShape>(btVector3(size.x, size.y, size.z)));
+    EmplaceComponent<Rigidbody>(transform, collision, 0.f, 0.3f);
+}
 
-    context->UpdateSubresource(matrixBuf, 0, nullptr, &bufData, 0, 0);
-    context->VSSetConstantBuffers(0, 1, &matrixBuf);
+void Enemy::Update(const float /*deltaTime*/)
+{
 
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-
-    context->IASetVertexBuffers(0, 1, &mVertexBuf, &stride, &offset);
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->Draw(36, 0);
 }

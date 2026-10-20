@@ -1,43 +1,57 @@
 #pragma once
 
+#include "Component.h"
+
 #include <Windows.h>
 #include <d3d11.h>
+#include <span>
 #include <string>
+#include <wrl/client.h>
 
-namespace core
+namespace dx
 {
-    class Shader
+    class Shader : public Component
     {
     public:
-        Shader();
-        ~Shader();
-        bool Initialize(
+        Shader(
             ID3D11Device* device,
             const std::wstring& vsFilename,
             const std::string& vsEntryPoint,
             const std::wstring& psFilename,
-            const std::string& psEntryPoint);
+            const std::string& psEntryPoint,
+            std::span<const D3D11_INPUT_ELEMENT_DESC> inputLayout = {});
 
-        void Cleanup();
-
-        void SetShader(ID3D11DeviceContext* deviceContext);
-
-        inline ID3DBlob* GetVSBlob() const
+        Shader(const Shader& other)
         {
-            return mVSBlob;
+            if (this != &other)
+            {
+                this->mInputLayout = other.mInputLayout;
+                this->mVertexShader = other.mVertexShader;
+                this->mPixelShader = other.mPixelShader;
+            }
         }
 
+        Shader& operator=(const Shader& other)
+        {
+            if (this != &other)
+            {
+                this->mInputLayout = other.mInputLayout;
+                this->mVertexShader = other.mVertexShader;
+                this->mPixelShader = other.mPixelShader;
+            }
+            return *this;
+        }
+
+        void Bind(ID3D11DeviceContext* context) const;
+
     private:
-        bool compileShaderFromFile(
+        Microsoft::WRL::ComPtr<ID3D11InputLayout> mInputLayout;
+        Microsoft::WRL::ComPtr<ID3D11VertexShader> mVertexShader;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader> mPixelShader;
+
+        Microsoft::WRL::ComPtr<ID3DBlob> compileShaderFromFile(
             const std::wstring& filename,
             const std::string& entryPoint,
-            const std::string& shaderModel,
-            ID3DBlob** blobOut);
-
-    private:
-        ID3D11VertexShader* mVertexShader;
-        ID3D11PixelShader* mPixelShader;
-
-        ID3DBlob* mVSBlob;
+            const std::string& shaderModel);
     };
 }

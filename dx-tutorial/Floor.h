@@ -1,39 +1,32 @@
 #pragma once
 
-#include "Actor.h"
+#include "Object.h"
+#include "Vertex.h"
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <DirectXMath.h>
+#include <vector>
 
-namespace core
+namespace dx
 {
-    class Floor : public Actor
+    class Floor : public Object
     {
     public:
-        Floor();
-        Floor(ID3D11Device* device);
-        
-        ~Floor() override;
+        Floor(
+            const DirectX::XMFLOAT3& position,
+            const DirectX::XMFLOAT3& size,
+            const DirectX::XMFLOAT4& color);
 
-        void Update(float deltaTime) override;
-        void Render(
-            ID3D11DeviceContext* context,
-            ID3D11Buffer* matrixBuf,
-            const DirectX::XMMATRIX& view,
-            const DirectX::XMMATRIX& proj) override;
-
-        void SyncPhysics() override;
-
-        inline btRigidBody* GetRigidBody() const
+        void Update(const float /*deltaTime*/) override
         {
-            return mRigidBody;
+            return;
+        }
+
+        inline const std::vector<Vertex>& GetVertices() const
+        {
+            return mVertices;
         }
 
     private:
-        ID3D11Buffer* mVertexBuf;
-
-        btRigidBody* mRigidBody;
-        btCollisionShape* mCollisionShape;
-        btDefaultMotionState* mMotionState;
+        std::vector<Vertex> mVertices;
     };
 }

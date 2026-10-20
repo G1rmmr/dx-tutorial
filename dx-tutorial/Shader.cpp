@@ -1,115 +1,123 @@
 #include "Shader.h"
+
 #include <d3dcompiler.h>
+#include <sstream>
+#include <stdexcept>
 
-using namespace core;
-
-Shader::Shader()
-    : mVertexShader(nullptr)
-    , mPixelShader(nullptr)
-    , mVSBlob(nullptr)
+namespace
 {
-
-}
-
-Shader::~Shader()
-{
-    Cleanup();
-}
-
-bool Shader::Initialize(
-    ID3D11Device* device,
-    const std::wstring& vsFilename,
-    const std::string& vsEntryPoint,
-    const std::wstring& psFilename,
-    const std::string& psEntryPoint)
-{
-    ID3DBlob* vsBlob = nullptr;
-    if(!compileShaderFromFile(vsFilename, vsEntryPoint, "vs_5_0", &vsBlob))
+    void ThrowIfFailed(HRESULT hr, const char* operation)
     {
-        return false;
-    }
-
-    ID3DBlob* psBlob = nullptr;
-    if(!compileShaderFromFile(psFilename, psEntryPoint, "ps_5_0", &psBlob))
-    {
-        if(vsBlob)
+        if (FAILED(hr))
         {
-            vsBlob->Release();
+            std::ostringstream message;
+            message << operation << " failed (HRESULT 0x" << std::hex
+                << static_cast<unsigned long>(hr) << ")";
+            throw std::runtime_error(message.str());
         }
-        return false;
+    }
+}
+
+using namespace dx;
+using namespace std;
+using namespace Microsoft::WRL;
+
+Shader::Shader(
+    ID3D11Device* device,
+    const wstring& vsFilename,
+    const string& vsEntryPoint,
+    const wstring& psFilename,
+    const string& psEntryPoint,
+    span<const D3D11_INPUT_ELEMENT_DESC> inputLayout)
+{
+    if (!device)
+    {
+        throw invalid_argument("Shader requires a device");
+    }
+    // 정점 셰이더 로드
+    ComPtr<ID3DBlob> vsBlob = compileShaderFromFile(vsFilename, vsEntryPoint, "vs_5_0");
+    if (!vsBlob)
+    {
+        throw runtime_error("Vertex shader compilation returned no bytecode");
     }
 
-    HRESULT hr = device->CreateVertexShader(
+    // 픽셀 셰이더 로드
+    ComPtr<ID3DBlob> psBlob = compileShaderFromFile(psFilename, psEntryPoint, "ps_5_0");
+    if (!psBlob)
+    {
+        throw runtime_error("Pixel shader compilation returned no bytecode");
+    }
+
+    HRESULT hr = S_OK;
+
+    // 입력 레이아웃 설정
+    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,   0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    if (inputLayout.empty())
+    {
+        inputLayout = layoutDesc;
+    }
+    UINT numElements = static_cast<UINT>(inputLayout.size());
+
+    if (FAILED(hr = device->CreateInputLayout(
+        inputLayout.data(),
+        numElements,
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(),
+        mInputLayout.GetAddressOf())))
+    {
+        ThrowIfFailed(hr, "Create input layout");
+    }
+
+    // 정점 셰이더 할당
+    if (FAILED(hr = device->CreateVertexShader(
         vsBlob->GetBufferPointer(),
         vsBlob->GetBufferSize(),
         nullptr,
-        &mVertexShader);
-
-    if(FAILED(hr))
+        mVertexShader.GetAddressOf())))
     {
-        vsBlob->Release();
-        psBlob->Release();
-        return false;
+        ThrowIfFailed(hr, "Create vertex shader");
     }
 
-    hr = device->CreatePixelShader(
+    // 픽셀 셰이더 할당
+    if (FAILED(hr = device->CreatePixelShader(
         psBlob->GetBufferPointer(),
         psBlob->GetBufferSize(),
         nullptr,
-        &mPixelShader);
-
-    if(FAILED(hr))
+        mPixelShader.GetAddressOf())))
     {
-        vsBlob->Release();
-        psBlob->Release();
-        return false;
+        ThrowIfFailed(hr, "Create pixel shader");
     }
-
-    mVSBlob = vsBlob;
-    psBlob->Release();
-
-    return true;
 }
 
-void Shader::Cleanup()
+void Shader::Bind(ID3D11DeviceContext* context) const
 {
-    if(mVSBlob)
+    if (!context)
     {
-        mVSBlob->Release();
-        mVSBlob = nullptr;
+        throw invalid_argument("Shader::Bind requires a context");
     }
-
-    if(mVertexShader)
-    {
-        mVertexShader->Release();
-        mVertexShader = nullptr;
-    }
-
-    if(mPixelShader)
-    {
-        mPixelShader->Release();
-        mPixelShader = nullptr;
-    }
+    context->IASetInputLayout(mInputLayout.Get());
+    context->VSSetShader(mVertexShader.Get(), nullptr, 0);
+    context->PSSetShader(mPixelShader.Get(), nullptr, 0);
 }
 
-void Shader::SetShader(ID3D11DeviceContext* deviceContext)
-{
-    deviceContext->VSSetShader(mVertexShader, nullptr, 0);
-    deviceContext->PSSetShader(mPixelShader, nullptr, 0);
-}
-
-bool Shader::compileShaderFromFile(
-    const std::wstring& filename,
-    const std::string& entryPoint,
-    const std::string& shaderModel,
-    ID3DBlob** blobOut)
+ComPtr<ID3DBlob> Shader::compileShaderFromFile(
+    const wstring& filename,
+    const string& entryPoint,
+    const string& shaderModel)
 {
     UINT compileFlags = 0;
 #ifdef _DEBUG
     compileFlags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-    ID3DBlob* errorMessage = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorMessage = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> blobOut = nullptr;
+
     HRESULT hr = D3DCompileFromFile(
         filename.c_str(),
         nullptr,
@@ -118,24 +126,15 @@ bool Shader::compileShaderFromFile(
         shaderModel.c_str(),
         compileFlags,
         0,
-        blobOut,
-        &errorMessage);
+        blobOut.GetAddressOf(),
+        errorMessage.GetAddressOf());
 
-    if(FAILED(hr))
+    if (errorMessage)
     {
-        if(errorMessage)
-        {
-            char* compileErrors = (char*)errorMessage->GetBufferPointer();
-            OutputDebugStringA(compileErrors);
-            errorMessage->Release();
-        }
-        return false;
+        const char* compileErrors = static_cast<const char*>(errorMessage->GetBufferPointer());
+        OutputDebugStringA(compileErrors);
     }
+    ThrowIfFailed(hr, "Compile shader");
 
-    if(errorMessage)
-    {
-        errorMessage->Release();
-    }
-
-    return true;
+    return blobOut;
 }

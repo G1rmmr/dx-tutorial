@@ -1,93 +1,57 @@
 ﻿#include "UI.h"
 #include "Renderer.h"
-#include "Pipeline.h"
-
-#include <dxgi.h>
 
 #include <d2d1.h>
+#include <dxgi.h>
+#include <algorithm>
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-using namespace core;
+using namespace dx;
+using Microsoft::WRL::ComPtr;
 
-UI::UI()
-    : mD2DFactory(nullptr)
-    , mDWriteFactory(nullptr)
-    , mRenderTarget(nullptr)
-    , mTextFormat(nullptr)
-    , mColorBrush(nullptr)
-    , mRenderer(nullptr)
-    , mWidth(0)
-    , mHeight(0)
-{
-
-}
-
-UI::~UI()
-{
-    Cleanup();
-}
+UI::UI() = default;
+UI::~UI() = default;
 
 bool UI::Initialize(Renderer* renderer, int width, int height)
 {
+    Cleanup();
+    if (!renderer || width <= 0 || height <= 0)
+    {
+        return false;
+    }
     mRenderer = renderer;
     mWidth = width;
     mHeight = height;
-
     HRESULT hr = D2D1CreateFactory(
-        D2D1_FACTORY_TYPE_SINGLE_THREADED,
-        IID_PPV_ARGS(&mD2DFactory));
-
-    if(FAILED(hr))
+        D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory1), nullptr,
+        reinterpret_cast<void**>(mD2DFactory.GetAddressOf()));
+    if (FAILED(hr))
     {
-        MessageBox(nullptr, TEXT("D2D1factory not initialized!"), TEXT("LOG"), MB_OK);
+        Cleanup();
         return false;
     }
-    
-    hr = DWriteCreateFactory(
-        DWRITE_FACTORY_TYPE_SHARED,
-        __uuidof(IDWriteFactory),
-        reinterpret_cast<IUnknown**>(&mDWriteFactory));
-
-    if(FAILED(hr))
+    hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+        reinterpret_cast<IUnknown**>(mDWriteFactory.GetAddressOf()));
+    if (FAILED(hr))
     {
-        MessageBox(nullptr, TEXT("DWritefactory not initialized!"), TEXT("LOG"), MB_OK);
+        Cleanup();
         return false;
     }
-
-    hr = mDWriteFactory->CreateTextFormat(
-        L"Malgun Gothic",
-        nullptr,
-        DWRITE_FONT_WEIGHT_NORMAL,
-        DWRITE_FONT_STYLE_NORMAL,
-        DWRITE_FONT_STRETCH_NORMAL,
-        32.0f,
-        L"ko-KR",
-        &mTextFormat);
-
-    if(FAILED(hr))
+    hr = mDWriteFactory->CreateTextFormat(L"Malgun Gothic", nullptr,
+        DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+        DWRITE_FONT_STRETCH_NORMAL, 32.0f, L"ko-KR", mTextFormat.GetAddressOf());
+    if (FAILED(hr))
     {
-        MessageBox(nullptr, TEXT("Format not initialized!"), TEXT("LOG"), MB_OK);
+        Cleanup();
         return false;
     }
-
     mTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
     mTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-
-    if(!createRenderTarget())
+    if (!createRenderTarget())
     {
-        MessageBox(nullptr, TEXT("Render target not initialized!"), TEXT("LOG"), MB_OK);
-        return false;
-    }
-
-    hr = mRenderTarget->CreateSolidColorBrush(
-        D2D1::ColorF(D2D1::ColorF::White),
-        &mColorBrush);
-
-    if(FAILED(hr))
-    {
-        MessageBox(nullptr, TEXT("brush not initialized!"), TEXT("LOG"), MB_OK);
+        Cleanup();
         return false;
     }
     return true;
@@ -95,138 +59,102 @@ bool UI::Initialize(Renderer* renderer, int width, int height)
 
 bool UI::createRenderTarget()
 {
-    if(!mRenderer || !mRenderer->GetPipeline())
+    ReleaseTarget();
+    if (!mRenderer || !mD2DFactory || mWidth <= 0 || mHeight <= 0)
     {
-        MessageBox(nullptr, TEXT("Renderer not initialized!"), TEXT("LOG"), MB_OK);
         return false;
     }
-
-    ID3D11Texture2D* backBuffer = nullptr;
-    HRESULT hr = mRenderer->GetPipeline()->GetSwapChain()->GetBuffer(
-        0,
-        IID_PPV_ARGS(&backBuffer));
-
-    if(FAILED(hr))
+    ComPtr<IDXGISurface> surface;
+    HRESULT hr = mRenderer->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(surface.GetAddressOf()));
+    if (FAILED(hr))
     {
-        MessageBox(nullptr, TEXT("buffer not initialized!"), TEXT("LOG"), MB_OK);
         return false;
     }
-        
-    IDXGISurface* dxgiSurface = nullptr;
-    hr = backBuffer->QueryInterface(__uuidof(IDXGISurface), (void**)&dxgiSurface);
-    
-    backBuffer->Release();
-    backBuffer = nullptr;
-
-    if(FAILED(hr))
-    {
-        MessageBox(nullptr, TEXT("surface not initialized!"), TEXT("LOG"), MB_OK);
-
-        if(dxgiSurface)
-        {
-            dxgiSurface->Release();
-        }
-        return false;
-    }
-
-    D2D1_RENDER_TARGET_PROPERTIES rtProps =
-        D2D1::RenderTargetProperties(
-            D2D1_RENDER_TARGET_TYPE_DEFAULT,
-            D2D1::PixelFormat(
-            DXGI_FORMAT_R8G8B8A8_UNORM,
-            D2D1_ALPHA_MODE_IGNORE),
-            0.0f,
-            0.0f);
-
+    const auto properties = D2D1::RenderTargetProperties(
+        D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_IGNORE));
     hr = mD2DFactory->CreateDxgiSurfaceRenderTarget(
-        dxgiSurface,
-        &rtProps,
-        &mRenderTarget);
-
-    if(FAILED(hr))
+        surface.Get(), &properties, mRenderTarget.GetAddressOf());
+    if (FAILED(hr))
     {
-        dxgiSurface->Release();
-        dxgiSurface = nullptr;
-
-        MessageBox(nullptr, TEXT("DXGI Render target not initialized!"), TEXT("LOG"), MB_OK);
         return false;
     }
-
-    dxgiSurface->Release();
-    dxgiSurface = nullptr;
+    hr = mRenderTarget->CreateSolidColorBrush(
+        D2D1::ColorF(D2D1::ColorF::White), mColorBrush.GetAddressOf());
+    if (FAILED(hr))
+    {
+        ReleaseTarget();
+        return false;
+    }
     return true;
+}
+
+void UI::ReleaseTarget()
+{
+    mColorBrush.Reset();
+    mRenderTarget.Reset();
+}
+
+bool UI::Resize(int width, int height)
+{
+    mWidth = width;
+    mHeight = height;
+    return createRenderTarget();
 }
 
 void UI::Cleanup()
 {
-    if(mColorBrush)
-    {
-        mColorBrush->Release();
-        mColorBrush = nullptr;
-    }
-
-    if(mTextFormat)
-    {
-        mTextFormat->Release();
-        mTextFormat = nullptr;
-    }
-
-    if(mRenderTarget)
-    {
-        mRenderTarget->Release();
-        mRenderTarget = nullptr;
-    }
-
-    if(mDWriteFactory)
-    {
-        mDWriteFactory->Release();
-        mDWriteFactory = nullptr;
-    }
-
-    if(mD2DFactory)
-    {
-        mD2DFactory->Release();
-        mD2DFactory = nullptr;
-    }
-
+    ReleaseTarget();
+    mTextFormat.Reset();
+    mDWriteFactory.Reset();
+    mD2DFactory.Reset();
     mRenderer = nullptr;
+    mWidth = 0;
+    mHeight = 0;
 }
 
 void UI::Begin()
 {
-    if(mRenderTarget)
-    {
-        mRenderTarget->BeginDraw();
-    }
-}
-
-void UI::Draw(const std::wstring& text, float x, float y, float /*size*/)
-{
-    if(!mRenderTarget || !mTextFormat || !mColorBrush)
+    if (!mRenderTarget && !createRenderTarget())
     {
         return;
     }
+    mRenderer->GetContext()->OMSetRenderTargets(0, nullptr, nullptr);
+    mRenderer->GetContext()->Flush();
+    mRenderTarget->BeginDraw();
+}
 
-    D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + 500.0f, y + 100.0f);
-
-    mRenderTarget->DrawTextW(
-        text.c_str(),
-        static_cast<UINT32>(text.size()),
-        mTextFormat,
-        layoutRect,
-        mColorBrush);
+void UI::Draw(const std::wstring& text, float x, float y, float size)
+{
+    if (!mRenderTarget || !mTextFormat || !mColorBrush)
+    {
+        return;
+    }
+    ComPtr<IDWriteTextLayout> layout;
+    const HRESULT hr = mDWriteFactory->CreateTextLayout(text.c_str(),
+        static_cast<UINT32>(text.size()), mTextFormat.Get(),
+        (std::max)(1.0f, static_cast<float>(mWidth) - x),
+        (std::max)(1.0f, static_cast<float>(mHeight) - y), layout.GetAddressOf());
+    if (FAILED(hr))
+    {
+        return;
+    }
+    if (size > 0)
+    {
+        layout->SetFontSize(size, DWRITE_TEXT_RANGE{0, static_cast<UINT32>(text.size())});
+    }
+    mRenderTarget->DrawTextLayout(D2D1::Point2F(x, y), layout.Get(), mColorBrush.Get());
 }
 
 void UI::End()
 {
-    if(mRenderTarget)
+    if (!mRenderTarget)
     {
-        HRESULT hr = mRenderTarget->EndDraw();
-        if(hr == D2DERR_RECREATE_TARGET)
-        {
-            mRenderTarget->Release();
-            mRenderTarget = nullptr;
-            createRenderTarget();
-        }
+        return;
+    }
+    if (mRenderTarget->EndDraw() == D2DERR_RECREATE_TARGET)
+    {
+        // Recreate both resources in the new render target's resource domain.
+        ReleaseTarget();
     }
 }

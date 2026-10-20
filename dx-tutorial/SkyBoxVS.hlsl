@@ -24,9 +24,9 @@ PS_INPUT VSMain(VS_INPUT input)
     pos = mul(pos, World);
     pos = mul(pos, View);
     pos = mul(pos, Proj);
-    
-    output.Pos = pos;
+
+    output.Pos = pos.xyww;
     output.TexCoord = normalize(input.Pos);
-    
+
     return output;
 }

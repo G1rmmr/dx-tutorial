@@ -1,392 +1,219 @@
 #include "Game.h"
 
-#include <windowsx.h>
-
-#include "Actor.h"
 #include "Player.h"
-#include "Renderer.h"
-#include "Physics.h"
 #include "Enemy.h"
 #include "Floor.h"
-#include "UI.h"
-#include "SkyBox.h"
+#include "Mesh.h"
+#include "Rigidbody.h"
+#include "Shader.h"
+
+#include <algorithm>
+#include <numeric>
+#include <span>
+#include <stdexcept>
+#include <type_traits>
 
 using namespace DirectX;
-using namespace core;
+using namespace dx;
 
-HINSTANCE mHInstance;
-HWND mHwnd;
-DWORD mTicksCount;
-
-Renderer* mRenderer;
-Player* mPlayer;
-Enemy* mEnemy;
-Physics* mPhysics;
-UI* mUI;
-SkyBox* mSkyBox;
-
-int mScreenWidth;
-int mScreenHeight;
-
-bool mIsRunning;
-
-static void DebugLog(const LPCTSTR& text)
+namespace
 {
-    MessageBox(nullptr, text, TEXT("LOG"), MB_OK);
+    void addDrawable(Object& object, ID3D11Device* device, const std::vector<Vertex>& vertices,
+        const Shader& shader)
+    {
+        std::vector<std::uint32_t> indices(vertices.size());
+        std::iota(indices.begin(), indices.end(), 0U);
+        object.EmplaceComponent<Mesh>(device, std::span<const Vertex>(vertices),
+            std::span<const std::uint32_t>(indices));
+        object.EmplaceComponent<Shader>(shader);
+    }
 }
 
-Game::Game()
-    : mHInstance(nullptr)
-    , mHwnd(nullptr)
-    , mTicksCount(0)
-    , mRenderer(nullptr)
-    , mPlayer(nullptr)
-    , mScreenWidth(0)
-    , mScreenHeight(0)
-    , mIsRunning(false)
-    , mPhysics(nullptr)
+Game::Game(Window& window)
+    : mWindow(window)
+    , mRenderer(window.GetHandle(), window.GetWidth(), window.GetHeight())
+    , mTicksCount(GetTickCount64())
     , mScore(0)
-    , mUI(nullptr)
-    , mSkyBox(nullptr)
+    , mIsRunning(true)
 {
+    const Shader shader(mRenderer.GetDevice(), L"VertexShader.hlsl", "VSMain",
+        L"PixelShader.hlsl", "PSMain");
 
+    auto floor = std::make_unique<Floor>(XMFLOAT3(0.f, -0.5f, 0.f),
+        XMFLOAT3(20.f, 0.5f, 20.f), XMFLOAT4(0.35f, 0.4f, 0.35f, 1.f));
+
+    addDrawable(*floor, mRenderer.GetDevice(), floor->GetVertices(), shader);
+    mPhysics.AddRigidBody(*floor->GetComponent<Rigidbody>());
+    mObjects.emplace_back(std::move(floor));
+
+    auto enemy = std::make_unique<Enemy>(XMFLOAT3(0.f, 1.f, 8.f), XMFLOAT3(1.f, 1.f, 1.f));
+    addDrawable(*enemy, mRenderer.GetDevice(), enemy->GetVertices(), shader);
+    mPhysics.AddRigidBody(*enemy->GetComponent<Rigidbody>());
+    mObjects.emplace_back(std::move(enemy));
+
+    auto player = std::make_unique<Player>();
+    mPlayer = player.get();
+    mPhysics.AddRigidBody(*player->GetComponent<Rigidbody>());
+    mObjects.emplace_back(std::move(player));
+    mPlayer->GetCamera().SetPerspective(XMConvertToRadians(60.f),
+        static_cast<float>(window.GetWidth()) / window.GetHeight(), 0.1f, 100.f);
+
+    mSkyBox = std::make_unique<SkyBox>(mRenderer.GetDevice(), mRenderer.GetContext());
+    if (!mUI.Initialize(&mRenderer, static_cast<int>(window.GetWidth()),
+        static_cast<int>(window.GetHeight())))
+    {
+        throw std::runtime_error("UI initialization failed");
+    }
+    mTicksCount = GetTickCount64();
 }
 
 Game::~Game()
 {
-    Cleanup();
-}
-
-bool Game::Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow)
-{
-    // window init
-    mHInstance = hInstance;
-    mScreenWidth = width;
-    mScreenHeight = height;
-
-    if(!createWindow(hInstance, width, height, nCmdShow))
-    {
-        return false;
-    }
-
-    mPhysics = new Physics();
-   
-    // Renderer
-    mRenderer = new Renderer();
-    if(!mRenderer->Initialize(mHwnd, width, height))
-    {
-        delete mRenderer;
-        mRenderer = nullptr;
-
-        DebugLog(L"Renderer not initialized!");
-        return false;
-    }
-
-    // Sky box
-    mSkyBox = new SkyBox(
-        mRenderer->GetPipeline()->GetDevice(),
-        mRenderer->GetPipeline()->GetDeviceContext());
-
-    // UI
-    mUI = new UI();
-    if(!mUI->Initialize(mRenderer, width, height))
-    {
-        DebugLog(L"UI not initialized!");
-        return false;
-    }
-
-    // Actors
-    auto enemy = new Enemy(mRenderer->GetPipeline()->GetDevice());
-    mActors.emplace_back(enemy);
-    mPhysics->AddRigidBody(enemy->GetRigidBody());
-
-
-    auto floor = new Floor();
-    // mActors.emplace_back(floor);
-    mPhysics->AddRigidBody(floor->GetRigidBody());
-
-    // player
-    mPlayer = new Player();
-    mPhysics->AddRigidBody(mPlayer->GetRigidBody());
-
-    // set
-    mTicksCount = GetTickCount64();
-    mIsRunning = true;
-
-    return true;
+    mWindow.SetMouseLook(false);
+    mPhysics.ClearBodies();
 }
 
 void Game::Run()
 {
-    MSG msg = {0};
-
-    while(mIsRunning)
+    while (mIsRunning)
     {
-        while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        mInput.BeginFrame();
+        UINT resizeWidth = 0;
+        UINT resizeHeight = 0;
+        Event event;
+        while (mWindow.PollEvent(event))
         {
-            if(msg.message == WM_QUIT)
+            mInput.HandleEvent(event);
+            std::visit([&](const auto& value)
             {
-                mIsRunning = false;
-                break;
-            }
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+                using T = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<T, QuitEvent> || std::is_same_v<T, CloseEvent>)
+                {
+                    mIsRunning = false;
+                }
+                else if constexpr (std::is_same_v<T, ResizeEvent>)
+                {
+                    if (value.Width && value.Height)
+                    {
+                        resizeWidth = value.Width;
+                        resizeHeight = value.Height;
+                    }
+                }
+            }, event);
         }
-
-        if(!mIsRunning)
+        if (!mIsRunning)
         {
             break;
         }
+        if (resizeWidth && resizeHeight)
+        {
+            resize(resizeWidth, resizeHeight);
+        }
 
-        ULONGLONG currentTime = GetTickCount64();
-        float deltaTime = (currentTime - mTicksCount) / 1000.f;
-        deltaTime = deltaTime > 0.05f ? 0.05f : deltaTime;
-            
+        if (!mWindow.IsActive())
+        {
+            mWindow.SetMouseLook(false);
+            mInput.HandleEvent(FocusLostEvent{});
+            mWindow.WaitForEvents();
+            mTicksCount = GetTickCount64();
+            continue;
+        }
+        if (mRenderer.IsOccluded() && !mRenderer.TestVisibility())
+        {
+            mWindow.SetMouseLook(false);
+            mInput.HandleEvent(FocusLostEvent{});
+            mWindow.WaitForEvents(100);
+            mTicksCount = GetTickCount64();
+            continue;
+        }
+        mWindow.SetMouseLook(true);
+
+        const ULONGLONG currentTime = GetTickCount64();
+        const float deltaTime = std::min(static_cast<float>(currentTime - mTicksCount) / 1000.f, 0.05f);
         mTicksCount = currentTime;
-
         processInput(deltaTime);
+        if (!mIsRunning)
+        {
+            break;
+        }
         update(deltaTime);
         render();
     }
 }
 
-void Game::Cleanup()
+void Game::centerMouse()
 {
-    if(mSkyBox)
+    int x = 0;
+    int y = 0;
+    if (mWindow.CenterCursor(x, y))
     {
-        delete mSkyBox;
-        mSkyBox = nullptr;
-    }
-
-    if(mPlayer)
-    {
-        delete mPlayer;
-        mPlayer = nullptr;
-    }
-
-    if(!mActors.empty())
-    {
-        for(auto& actor : mActors)
-        {
-            delete actor;
-            actor = nullptr;
-        }
-    }
-
-    if(mUI)
-    {
-        mUI->Cleanup();
-        delete mUI;
-        mUI = nullptr;
-    }
-
-    if(mRenderer)
-    {
-        mRenderer->Cleanup();
-        delete mRenderer;
-        mRenderer = nullptr;
-    }
-
-    if(mHwnd)
-    {
-        DestroyWindow(mHwnd);
-        mHwnd = nullptr;
+        // Match the next frame's absolute baseline to the cursor warp.
+        mInput.HandleEvent(MouseMoveEvent{x, y});
     }
 }
 
-bool Game::createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow)
+void Game::processInput(const float deltaTime)
 {
-    WNDCLASSEX wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = sWindowProc;
-    wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszClassName = L"DX11GameWindowClass";
-
-    if(!RegisterClassEx(&wc))
-    {
-        return false;
-    }
-
-    mHwnd = CreateWindowEx(
-        0,
-        wc.lpszClassName,
-        L"DX11 Game",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        width, height,
-        nullptr,
-        nullptr,
-        hInstance,
-        this
-    );
-
-    if(!mHwnd)
-    {
-        return false;
-    }
-
-    ShowWindow(mHwnd, nCmdShow);
-    UpdateWindow(mHwnd);
-
-    return true;
-}
-
-LRESULT CALLBACK Game::sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    Game* game = nullptr;
-
-    if(message == WM_NCCREATE)
-    {
-        CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lParam);
-        game = static_cast<Game*>(cs->lpCreateParams);
-
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(game));
-    }
-    else
-    {
-        game = reinterpret_cast<Game*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    }
-
-    if(game)
-    {
-        return game->windowProc(hwnd, message, wParam, lParam);
-    }
-
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
-
-LRESULT Game::windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch(message)
-    {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-
-    case WM_MOUSEMOVE:
-    {
-        static bool firstCall = true;
-        static int centerX = 0;
-        static int centerY = 0;
-
-        if(firstCall)
-        {
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-
-            centerX = (rect.right - rect.left) / 2;
-            centerY = (rect.bottom - rect.top) / 2;
-            firstCall = false;
-        }
-
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-
-        int deltaX = x - centerX;
-        int deltaY = y - centerY;
-
-        mPlayer->ProcessMouseMovement((float)deltaX, (float)-deltaY);
-
-        POINT pt = {0, 0};
-        pt.x = centerX;
-        pt.y = centerY;
-        ClientToScreen(hwnd, &pt);
-        SetCursorPos(pt.x, pt.y);
-
-        return 0;
-    }
-
-    case WM_LBUTTONDOWN:
-    {
-        if(mPlayer->Shoot(mPhysics->GetDynamicsWorld()))
-        {
-            ++mScore;
-        }
-        return 0;
-    }
-
-    default:
-        break;
-    }
-
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
-
-void Game::processInput(float deltaTime)
-{
-    if(GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+    if (mInput.IsKeyDown(Key::Escape))
     {
         mIsRunning = false;
         return;
     }
-
-    bool forwardKey = (GetAsyncKeyState('W') & 0x8000) != 0;
-    bool backKey = (GetAsyncKeyState('S') & 0x8000) != 0;
-    bool leftKey = (GetAsyncKeyState('A') & 0x8000) != 0;
-    bool rightKey = (GetAsyncKeyState('D') & 0x8000) != 0;
-    bool jumpKey = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
-
-    mPlayer->ProcessKeyboard(mPhysics->GetDynamicsWorld(), deltaTime,
-        forwardKey, backKey, leftKey, rightKey, jumpKey);
+    mPlayer->ProcessMouseMovement(static_cast<float>(mInput.GetMouseDeltaX()),
+        static_cast<float>(mInput.GetMouseDeltaY()));
+    mPlayer->ProcessKeyboard(&mPhysics.GetDynamics(), deltaTime,
+        mInput.IsKeyDown(Key::W), mInput.IsKeyDown(Key::S), mInput.IsKeyDown(Key::A),
+        mInput.IsKeyDown(Key::D), mInput.IsKeyDown(Key::Space));
+    if (mInput.WasMouseButtonPressed(MouseButton::Left) &&
+        mPlayer->Shoot(&mPhysics.GetDynamics()))
+    {
+        ++mScore;
+    }
+    centerMouse();
 }
 
 void Game::update(const float deltaTime)
 {
-    mPhysics->Update(deltaTime);
-
-    for(auto& actor : mActors)
+    mPhysics.Update(deltaTime);
+    for (const auto& object : mObjects)
     {
-        actor->SyncPhysics();
+        object->Update(deltaTime);
     }
+}
 
-    mPlayer->SyncPhysics();
-
-    DirectX::XMMATRIX view = mPlayer->GetViewMatrix();
-
-    constexpr float fovAngleY = DirectX::XMConvertToRadians(60.f);
-    const float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
-    const float nearZ = 0.1f;
-    const float farZ = 100.0f;
-
-    DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
-
-    mRenderer->SetCameraMatrices(view, proj);
+void Game::resize(UINT width, UINT height)
+{
+    if (width == mRenderer.GetWidth() && height == mRenderer.GetHeight())
+    {
+        return;
+    }
+    mUI.ReleaseTarget();
+    mRenderer.Resize(width, height);
+    if (!mUI.Resize(static_cast<int>(width), static_cast<int>(height)))
+    {
+        throw std::runtime_error("UI resize failed");
+    }
+    mPlayer->GetCamera().SetPerspective(XMConvertToRadians(60.f),
+        static_cast<float>(width) / height, 0.1f, 100.f);
+    mInput.HandleEvent(FocusLostEvent{});
 }
 
 void Game::render()
 {
-    if(!mRenderer)
+    mRenderer.BeginFrame({0.f, 0.f, 0.f, 1.f});
+    const Camera& camera = mPlayer->GetCamera();
+    mSkyBox->Render(mRenderer.GetContext(), mRenderer.GetMatrixBuffer(),
+        camera.GetView(), camera.GetProjection());
+    for (const auto& object : mObjects)
     {
-        return;
+        if (object.get() != mPlayer)
+        {
+            mRenderer.Draw(*object, camera);
+        }
     }
-
-    mRenderer->BeginFrame(0.f, 0.f, 0.f, 1.f);
-
-    if(mSkyBox)
-    {
-        XMMATRIX view = mPlayer->GetViewMatrix();
-
-        float aspect = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
-        XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect, 0.1f, 100.f);
-
-        mSkyBox->Render(
-            mRenderer->GetPipeline()->GetDeviceContext(),
-            mRenderer->GetMatrixBuffer(),
-            view,
-            proj);
-    }
-
-    mRenderer->Draw(mActors);
-
-    mUI->Begin();
-
-    wchar_t buff[64];
-    swprintf_s(buff, L"Score: %d", mScore);
-    mUI->Draw(buff, 50.0f, 50.0f, 32.0f);
-
-    mUI->End();
-    mRenderer->EndFrame();
+    mUI.Begin();
+    mUI.Draw(L"Score: " + std::to_wstring(mScore), 50.f, 50.f, 32.f);
+    mUI.Draw(L"WASD Move | Mouse Look | Space Jump | Left Click Fire | Esc Exit", 50.f, 96.f, 18.f);
+    mUI.End();
+    mRenderer.EndFrame();
 }

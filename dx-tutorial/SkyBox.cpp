@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <array>
+#include <filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -12,55 +13,34 @@
 const float BOX_SIZE = 50.f;
 
 using namespace DirectX;
-using namespace core;
+using namespace dx;
+using Microsoft::WRL::ComPtr;
 
-SkyBox::SkyBox(
-    ID3D11Device* device, 
-    ID3D11DeviceContext* context)
-    : mVertexBuffer(nullptr)
-    , mIndexBuffer(nullptr)
-    , mSamplerState(nullptr)
-    , mCubeMapSRV(nullptr)
-    , mIL(nullptr)
-    , mShader(nullptr)
+SkyBox::SkyBox(ID3D11Device* device, ID3D11DeviceContext* /*context*/)
 {
+    if (!device)
+    {
+        throw std::invalid_argument("SkyBox requires a device");
+    }
     initCubeMesh(device);
     loadCubeMap(device);
     initShaders(device);
-}
-
-SkyBox::~SkyBox()
-{
-    if(mVertexBuffer)
+    D3D11_DEPTH_STENCIL_DESC depth{};
+    depth.DepthEnable = TRUE;
+    depth.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    depth.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    D3D11_RASTERIZER_DESC raster{};
+    raster.FillMode = D3D11_FILL_SOLID;
+    raster.CullMode = D3D11_CULL_NONE;
+    raster.DepthClipEnable = TRUE;
+    if (FAILED(device->CreateDepthStencilState(&depth, mDepthState.GetAddressOf())) ||
+        FAILED(device->CreateRasterizerState(&raster, mRasterizerState.GetAddressOf())))
     {
-        mVertexBuffer->Release();
-        mVertexBuffer = nullptr;
-    }
-
-    if(mIndexBuffer)
-    {
-        mIndexBuffer->Release();
-        mIndexBuffer = nullptr;
-    }
-
-    if(mSamplerState)
-    {
-        mSamplerState->Release();
-        mSamplerState = nullptr;
-    }
-
-    if(mCubeMapSRV)
-    {
-        mCubeMapSRV->Release();
-        mCubeMapSRV = nullptr;
-    }
-
-    if(mIL)
-    {
-        mIL->Release();
-        mIL = nullptr;
+        throw std::runtime_error("Failed to create skybox render states");
     }
 }
+
+SkyBox::~SkyBox() = default;
 
 void SkyBox::initCubeMesh(ID3D11Device* device)
 {
@@ -129,7 +109,10 @@ void SkyBox::initCubeMesh(ID3D11Device* device)
 
     D3D11_SUBRESOURCE_DATA initVData{};
     initVData.pSysMem = vertices;
-    device->CreateBuffer(&buffDsc, &initVData, &mVertexBuffer);
+    if (FAILED(device->CreateBuffer(&buffDsc, &initVData, mVertexBuffer.GetAddressOf())))
+    {
+        throw std::runtime_error("Failed to create skybox vertex buffer");
+    }
 
     buffDsc.ByteWidth = sizeof(indices);
     buffDsc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -137,167 +120,131 @@ void SkyBox::initCubeMesh(ID3D11Device* device)
     D3D11_SUBRESOURCE_DATA initIData{};
     initIData.pSysMem = indices;
 
-    device->CreateBuffer(&buffDsc, &initIData, &mIndexBuffer);
+    if (FAILED(device->CreateBuffer(&buffDsc, &initIData, mIndexBuffer.GetAddressOf())))
+    {
+        throw std::runtime_error("Failed to create skybox index buffer");
+    }
 }
 
-bool SkyBox::loadCubeTex(
-    ID3D11Device* device, 
-    std::vector<uint8_t>& outPixels, 
-    UINT& outRowPitch, 
+bool SkyBox::loadCubeTex(std::vector<uint8_t>& outPixels, UINT& width, UINT& height,
     const std::string& filePath)
 {
-    int width;
-    int height;
-    int comp;
-
-    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &comp, 4);
-    if(!data)
+    int imageWidth = 0, imageHeight = 0, channels = 0;
+    std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> pixels(
+        stbi_load(filePath.c_str(), &imageWidth, &imageHeight, &channels, 4), stbi_image_free);
+    if (!pixels || imageWidth <= 0 || imageHeight <= 0 ||
+        imageWidth > D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION ||
+        imageHeight > D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION)
     {
         return false;
     }
-
-    outRowPitch = static_cast<UINT>(width * 4);
-    size_t totalSize = static_cast<size_t>(width) * height * 4;
-    outPixels.resize(totalSize);
-    memcpy(outPixels.data(), data, totalSize);
-
-    stbi_image_free(data);
+    width = static_cast<UINT>(imageWidth);
+    height = static_cast<UINT>(imageHeight);
+    const size_t count = static_cast<size_t>(width) * height * 4;
+    outPixels.assign(pixels.get(), pixels.get() + count);
     return true;
 }
 
 void SkyBox::loadCubeMap(ID3D11Device* device)
 {
-    const std::array<std::string, 6> faces = {
-        "lf.tga", // -X: 왼쪽
-        "rt.tga", // +X: 오른쪽
-        "up.tga", // +Y: 위
-        "dn.tga", // -Y: 아래
-        "ft.tga", // +Z: 앞
-        "bk.tga"  // -Z: 뒤
-    };
-
-    std::vector<std::vector<std::uint8_t>> pixelData(6);
-    UINT rowPitch = 0;
-    for(int i = 0; i < 6; ++i)
+    // DXGI cube slices: +X, -X, +Y, -Y, +Z, -Z.
+    const std::array<std::string, 6> faces{"lf.tga", "rt.tga", "up.tga", "dn.tga", "ft.tga", "bk.tga"};
+    std::array<std::vector<uint8_t>, 6> pixels;
+    std::array<D3D11_SUBRESOURCE_DATA, 6> subresources{};
+    UINT width = 0, height = 0;
+    for (size_t i = 0; i < faces.size(); ++i)
     {
-        if(!loadCubeTex(device, pixelData[i], rowPitch, faces[i]))
+        UINT faceWidth = 0, faceHeight = 0;
+        if (!loadCubeTex(pixels[i], faceWidth, faceHeight, faces[i]) || faceWidth != faceHeight)
         {
-            return;
+            throw std::runtime_error("Missing or invalid skybox cube face: " + faces[i]);
         }
+        if (i == 0)
+        {
+            width = faceWidth;
+            height = faceHeight;
+        }
+        if (faceWidth != width || faceHeight != height)
+        {
+            throw std::runtime_error("Skybox cube faces must have matching dimensions");
+        }
+        subresources[i].pSysMem = pixels[i].data();
+        subresources[i].SysMemPitch = width * 4;
     }
-
-    D3D11_TEXTURE2D_DESC texDesc{};
-    texDesc.Width = 1024;
-    texDesc.Height = 1024;
-    texDesc.MipLevels = 1;
-    texDesc.ArraySize = 6;
-    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    texDesc.SampleDesc.Count = 1;
-    texDesc.Usage = D3D11_USAGE_DEFAULT;
-    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-    D3D11_SUBRESOURCE_DATA subData[6];
-    for(int i = 0; i < 6; ++i)
+    D3D11_TEXTURE2D_DESC description{};
+    description.Width = width;
+    description.Height = height;
+    description.MipLevels = 1;
+    description.ArraySize = 6;
+    description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    description.SampleDesc.Count = 1;
+    description.Usage = D3D11_USAGE_DEFAULT;
+    description.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    description.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+    ComPtr<ID3D11Texture2D> texture;
+    if (FAILED(device->CreateTexture2D(&description, subresources.data(), texture.GetAddressOf())))
     {
-        subData[i].pSysMem = pixelData[i].data();
-        subData[i].SysMemPitch = rowPitch;
-        subData[i].SysMemSlicePitch = 0;
+        throw std::runtime_error("Failed to create skybox cube texture");
     }
-
-    ID3D11Texture2D* texArray = nullptr;
-    device->CreateTexture2D(&texDesc, subData, &texArray);
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = texDesc.Format;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-    srvDesc.TextureCube.MostDetailedMip = 0;
-    srvDesc.TextureCube.MipLevels = 1;
-
-    device->CreateShaderResourceView(texArray, &srvDesc, &mCubeMapSRV);
-
-    if(texArray) 
+    D3D11_SHADER_RESOURCE_VIEW_DESC view{};
+    view.Format = description.Format;
+    view.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+    view.TextureCube.MipLevels = 1;
+    if (FAILED(device->CreateShaderResourceView(texture.Get(), &view, mCubeMapSRV.GetAddressOf())))
     {
-        texArray->Release();
+        throw std::runtime_error("Failed to create skybox cube view");
     }
-
-    D3D11_SAMPLER_DESC sampDesc{};
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    device->CreateSamplerState(&sampDesc, &mSamplerState);
+    D3D11_SAMPLER_DESC sampler{};
+    sampler.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler.AddressU = sampler.AddressV = sampler.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampler.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampler.MaxLOD = D3D11_FLOAT32_MAX;
+    if (FAILED(device->CreateSamplerState(&sampler, mSamplerState.GetAddressOf())))
+    {
+        throw std::runtime_error("Failed to create skybox sampler");
+    }
 }
 
 bool SkyBox::initShaders(ID3D11Device* device)
 {
-    mShader = new Shader();
-    if(!mShader->Initialize(device, L"SkyBoxVS.hlsl", "VSMain", L"SkyBoxPS.hlsl", "PSMain"))
-    {
-        return false;
-    }
-
-    ID3DBlob* vsBlob = mShader->GetVSBlob();
-    if(!vsBlob)
-    {
-        return false;
-    };
-
-    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-
-    HRESULT hr = device->CreateInputLayout(
-        layoutDesc,
-        _countof(layoutDesc),
-        vsBlob->GetBufferPointer(),
-        vsBlob->GetBufferSize(),
-        &mIL);
-
-    if(FAILED(hr)) 
-    {
-        return false;
-    }
-
+    const D3D11_INPUT_ELEMENT_DESC position{
+        "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0};
+    mShader = std::make_unique<Shader>(device, L"SkyBoxVS.hlsl", "VSMain",
+        L"SkyBoxPS.hlsl", "PSMain", std::span<const D3D11_INPUT_ELEMENT_DESC>(&position, 1));
     return true;
 }
 
-
-void SkyBox::Render(
-    ID3D11DeviceContext* context,
-    ID3D11Buffer* matrixBuf,
-    const DirectX::XMMATRIX& view,
-    const DirectX::XMMATRIX& proj)
+void SkyBox::Render(ID3D11DeviceContext* context, ID3D11Buffer* matrixBuf,
+    const XMMATRIX& view, const XMMATRIX& projection)
 {
-    struct MatrixBufferType
+    if (!context || !matrixBuf)
     {
-        DirectX::XMMATRIX World;
-        DirectX::XMMATRIX View;
-        DirectX::XMMATRIX Proj;
-    };
-
-    MatrixBufferType matrices;
-
-    matrices.World = DirectX::XMMatrixIdentity();
-    matrices.View = DirectX::XMMatrixTranspose(view);
-    matrices.Proj = DirectX::XMMatrixTranspose(proj);
-
+        throw std::invalid_argument("SkyBox rendering requires a context and matrix buffer");
+    }
+    struct Matrices { XMMATRIX World, View, Projection; };
+    XMMATRIX centeredView = view;
+    centeredView.r[3] = XMVectorSet(0, 0, 0, 1);
+    const Matrices matrices{XMMatrixIdentity(), XMMatrixTranspose(centeredView), XMMatrixTranspose(projection)};
     context->UpdateSubresource(matrixBuf, 0, nullptr, &matrices, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &matrixBuf);
 
-    mShader->SetShader(context);
-    context->IASetInputLayout(mIL);
-
-    UINT stride = sizeof(float) * 5;
-    UINT offset = 0;
-
-    context->IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
-    context->IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    ComPtr<ID3D11DepthStencilState> previousDepth;
+    ComPtr<ID3D11RasterizerState> previousRasterizer;
+    UINT previousStencil = 0;
+    context->OMGetDepthStencilState(previousDepth.GetAddressOf(), &previousStencil);
+    context->RSGetState(previousRasterizer.GetAddressOf());
+    context->OMSetDepthStencilState(mDepthState.Get(), 0);
+    context->RSSetState(mRasterizerState.Get());
+    mShader->Bind(context);
+    const UINT stride = sizeof(float) * 5, offset = 0;
+    context->IASetVertexBuffers(0, 1, mVertexBuffer.GetAddressOf(), &stride, &offset);
+    context->IASetIndexBuffer(mIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    context->PSSetShaderResources(0, 1, &mCubeMapSRV);
-    context->PSSetSamplers(0, 1, &mSamplerState);
-
+    context->PSSetShaderResources(0, 1, mCubeMapSRV.GetAddressOf());
+    context->PSSetSamplers(0, 1, mSamplerState.GetAddressOf());
     context->DrawIndexed(36, 0, 0);
+    ID3D11ShaderResourceView* emptyView = nullptr;
+    context->PSSetShaderResources(0, 1, &emptyView);
+    context->OMSetDepthStencilState(previousDepth.Get(), previousStencil);
+    context->RSSetState(previousRasterizer.Get());
 }

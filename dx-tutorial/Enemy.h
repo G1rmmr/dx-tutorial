@@ -1,40 +1,26 @@
 #pragma once
 
-#include "Actor.h"
+#include "Object.h"
+#include "Vertex.h"
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <DirectXMath.h>
+#include <vector>
 
-namespace core
+namespace dx
 {
-	class Enemy : public Actor
+	class Enemy : public Object
 	{
 	public:
-		Enemy();
-		Enemy(ID3D11Device* device);
-
-		~Enemy() override;
+		Enemy(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& size);
 
 		void Update(const float deltaTime) override;
 
-		void Render(
-			ID3D11DeviceContext* context,
-			ID3D11Buffer* matrixBuf,
-			const DirectX::XMMATRIX& view,
-			const DirectX::XMMATRIX& proj) override;
-
-		void SyncPhysics() override;
-
-		inline btRigidBody* GetRigidBody() const
+		inline const std::vector<Vertex>& GetVertices() const
 		{
-			return mRigidBody;
+			return mVertices;
 		}
 
 	private:
-		ID3D11Buffer* mVertexBuf;
-
-		btRigidBody* mRigidBody;
-		btCollisionShape* mCollisionShape;
-		btDefaultMotionState* mMotionState;
+		std::vector<Vertex> mVertices;
 	};
 }

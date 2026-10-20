@@ -1,66 +1,31 @@
 #pragma once
-
-#include <DirectXMath.h>
-
-#include <bullet/btBulletCollisionCommon.h>
+#include "Object.h"
+#include "Camera.h"
 #include <bullet/btBulletDynamicsCommon.h>
-
-namespace core
+namespace dx
 {
-	class Player
-	{
-	public:
+    class Player : public Object
+    {
+    public:
         Player();
-
+        void Update(float deltaTime) override;
+        void SyncPhysics();
         void ProcessMouseMovement(float xOffset, float yOffset);
-
-		void ProcessKeyboard(btDynamicsWorld* world, const float deltaTime,
-			bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey);
-
+        void ProcessKeyboard(btDynamicsWorld* world, float deltaTime,
+            bool forwardKey, bool backKey, bool leftKey, bool rightKey, bool jumpKey);
+        bool Shoot(btDiscreteDynamicsWorld* world);
         DirectX::XMMATRIX GetViewMatrix() const;
-		void UpdateCameraVectors();
-
-		void SyncPhysics();
-
-		bool Shoot(btDiscreteDynamicsWorld* world);
-
-		inline btRigidBody* GetRigidBody() const
-		{
-			return mRigidBody;
-		}
-
-		inline DirectX::XMFLOAT3 GetPos() const
-		{
-			return mPos;
-		}
-
-		inline DirectX::XMFLOAT3 GetForward() const
-		{
-			return mForward;
-		}
-
-	private:
-		bool isOnGround(btDynamicsWorld* world, float rayLength = 0.5f);
-
-		void jump(btVector3& dir, const float velocity = 3.f);
-
-	private:
-		DirectX::XMFLOAT3 mPos;
-
-		DirectX::XMFLOAT3 mForward;
-		DirectX::XMFLOAT3 mRight;
-		DirectX::XMFLOAT3 mUp;
-
-		btRigidBody* mRigidBody;
-		btCollisionShape* mCollisionShape;
-		btDefaultMotionState* mMotionState;
-
-		float mYaw;
-		float mPitch;
-
-		float mMovementSpeed;
-		float mMouseSensitivity;
-
-		bool bIsOnGround = false;
-	};
+        void UpdateCameraVectors();
+        Camera& GetCamera() noexcept;
+        const Camera& GetCamera() const noexcept;
+    private:
+        bool isOnGround(btDynamicsWorld* world, float rayLength = 0.15f);
+        void jump(btVector3& velocity, float jumpVelocity = 5.f);
+        float mYaw = 0.f;
+        float mPitch = 0.f;
+        float mMovementSpeed = 5.f;
+        float mMouseSensitivity = 0.1f;
+        bool bIsOnGround = false;
+        bool mJumpWasDown = false;
+    };
 }

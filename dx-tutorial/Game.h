@@ -1,49 +1,48 @@
 #pragma once
 
 #include <vector>
-#include <Windows.h>
+#include <memory>
 
-namespace core
+#include "Physics.h"
+#include "Object.h"
+#include "Window.h"
+#include "Input.h"
+#include "Renderer.h"
+#include "SkyBox.h"
+#include "UI.h"
+
+namespace dx
 {
+    class Player;
+
     class Game
     {
     public:
-        Game();
+        Game(Window& window);
         ~Game();
-
-        bool Initialize(HINSTANCE hInstance, int width, int height, int nCmdShow);
         void Run();
-        void Cleanup();
 
     private:
-        static LRESULT CALLBACK sWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        Window& mWindow;
+        Renderer mRenderer;
+        // Bodies are destroyed before the physics service and GPU device.
+        Physics mPhysics;
+        std::vector<std::unique_ptr<Object>> mObjects;
+        Player* mPlayer = nullptr;
+        std::unique_ptr<SkyBox> mSkyBox;
+        UI mUI;
+        Input mInput;
 
-        LRESULT windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        ULONGLONG mTicksCount;
 
-        bool createWindow(HINSTANCE hInstance, int width, int height, int nCmdShow);
+        int mScore;
+
+        bool mIsRunning;
 
         void processInput(const float deltaTime);
         void update(const float deltaTime);
         void render();
-
-    private:
-        HINSTANCE mHInstance;
-        HWND mHwnd;
-        ULONGLONG mTicksCount;
-
-        class Renderer* mRenderer;
-        class Player* mPlayer;
-        class Physics* mPhysics;
-        class UI* mUI;
-        class SkyBox* mSkyBox;
-
-        std::vector<class Actor*> mActors;
-
-        int mScreenWidth;
-        int mScreenHeight;
-        
-        int mScore;
-
-        bool mIsRunning;
+        void resize(UINT width, UINT height);
+        void centerMouse();
     };
 }

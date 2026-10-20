@@ -163,7 +163,7 @@
 2. **픽셀 셰이더(HLSL)**  
    - 입력된 색상을 그대로 출력 (또는 간단한 조명)  
 3. **Input Layout**  
-   - POSITION (float3), COLOR (float4) 구조 정의  
+   - POSITION (FLOAT3), COLOR (FLOAT4) 구조 정의  
 4. **Cube::Render**:  
    - `IASetVertexBuffers`, `IASetIndexBuffer`  
    - `context->DrawIndexed(36, 0, 0)`  

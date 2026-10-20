@@ -5,8 +5,11 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
+#include <memory>
+#include <wrl/client.h>
 
-namespace core
+namespace dx
 {
     class SkyBox
     {
@@ -22,34 +25,35 @@ namespace core
 
         inline ID3D11ShaderResourceView* GetCubeMapSRV() const
         {
-            return mCubeMapSRV;
+            return mCubeMapSRV.Get();
         }
 
         inline ID3D11SamplerState* GetSamplerState() const
         {
-            return mSamplerState;
+            return mSamplerState.Get();
         }
 
     private:
         void initCubeMesh(ID3D11Device* device);
 
         bool loadCubeTex(
-            ID3D11Device* device,
             std::vector<uint8_t>& outPixels,
-            UINT& outRowPitch,
+            UINT& width,
+            UINT& height,
             const std::string& filePath);
 
         void loadCubeMap(ID3D11Device* device);
 
         bool initShaders(ID3D11Device* device);
 
-        class Shader* mShader;
-        ID3D11InputLayout* mIL;
+        std::unique_ptr<class Shader> mShader;
 
-        ID3D11Buffer* mVertexBuffer;
-        ID3D11Buffer* mIndexBuffer;
+        Microsoft::WRL::ComPtr<ID3D11Buffer> mVertexBuffer;
+        Microsoft::WRL::ComPtr<ID3D11Buffer> mIndexBuffer;
 
-        ID3D11ShaderResourceView* mCubeMapSRV;
-        ID3D11SamplerState* mSamplerState;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> mCubeMapSRV;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> mSamplerState;
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> mDepthState;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> mRasterizerState;
     };
 }

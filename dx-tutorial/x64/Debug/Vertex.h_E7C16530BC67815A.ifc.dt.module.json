@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\Vertex.obj",
+            "outputs": [
+                "x64\\Debug\\Vertex.h_E7C16530BC67815A.ifc.dt.module.json",
+                "x64\\Debug\\Vertex.h_E7C16530BC67815A.ifc.dt.d.json",
+                "x64\\Debug\\Vertex.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "C:\\Users\\g1\\source\\repos\\G1rmmr\\dx-tutorial\\dx-tutorial\\Vertex.h",
+                    "source-path": "c:\\users\\g1\\source\\repos\\g1rmmr\\dx-tutorial\\dx-tutorial\\vertex.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}

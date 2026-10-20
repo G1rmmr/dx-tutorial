@@ -21,15 +21,15 @@ struct VS_OUTPUT
 VS_OUTPUT VSMain(VS_INPUT input)
 {
     VS_OUTPUT output;
-    
+
     float4 pos = float4(input.Pos, 1.0f);
-    
+
     pos = mul(pos, World);
     pos = mul(pos, View);
     pos = mul(pos, Proj);
 
     output.Pos = pos;
     output.Color = input.Color;
-    
+
     return output;
 }

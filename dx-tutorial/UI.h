@@ -3,8 +3,9 @@
 #include <d2d1_1.h>
 #include <dwrite.h>
 #include <string>
+#include <wrl/client.h>
 
-namespace core
+namespace dx
 {
     class Renderer;
 
@@ -16,6 +17,8 @@ namespace core
 
         bool Initialize(Renderer* renderer, int width, int height);
         void Cleanup();
+        void ReleaseTarget();
+        bool Resize(int width, int height);
 
         void Begin();
 
@@ -27,15 +30,15 @@ namespace core
         bool createRenderTarget();
 
     private:
-        ID2D1Factory1* mD2DFactory;
-        IDWriteFactory* mDWriteFactory;
-        ID2D1RenderTarget* mRenderTarget;
-        IDWriteTextFormat* mTextFormat;
-        ID2D1SolidColorBrush* mColorBrush;
+        Microsoft::WRL::ComPtr<ID2D1Factory1> mD2DFactory;
+        Microsoft::WRL::ComPtr<IDWriteFactory> mDWriteFactory;
+        Microsoft::WRL::ComPtr<ID2D1RenderTarget> mRenderTarget;
+        Microsoft::WRL::ComPtr<IDWriteTextFormat> mTextFormat;
+        Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> mColorBrush;
 
-        class Renderer* mRenderer; 
-        
-        int mWidth;
-        int mHeight;
+        Renderer* mRenderer = nullptr;
+
+        int mWidth = 0;
+        int mHeight = 0;
     };
 }
